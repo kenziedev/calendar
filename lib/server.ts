@@ -16,7 +16,7 @@ export class HttpError extends Error {
 const ORIGINS = new Set([
   "https://kenzie.kr",
   "https://kenziedev.github.io",
-  "https://kenzie-our-calendar.balmy-cod-8181.chatgpt.site",
+  "https://kenzie-our-calendar.ohhs2.chatgpt.site",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:8787",

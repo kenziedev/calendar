@@ -45,7 +45,7 @@ npm test
 # APP_PIN 환경변수 설정 후
 npm run test:api
 # 배포 API에 대한 연동 검증
-node tests/api-smoke.mjs https://kenzie-our-calendar.balmy-cod-8181.chatgpt.site
+node tests/api-smoke.mjs https://kenzie-our-calendar.ohhs2.chatgpt.site
 ```
 
 API 검증은 `[자동 검증]` 이름의 2099년 일정 한 개를 만들고 지웁니다. 다른 일정을 수정하지 않습니다. 세션 분리, 인증, CORS, 유효성 검사, 중복 생성 방지, 동시 수정, 삭제와 로그아웃을 검증합니다.

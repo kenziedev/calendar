@@ -46,7 +46,7 @@ import {
   type Occurrence,
 } from "../lib/calendar";
 import { registerCalendarTool } from "../lib/webmcp";
-const API_ORIGIN = "https://kenzie-our-calendar.balmy-cod-8181.chatgpt.site";
+const API_ORIGIN = "https://kenzie-our-calendar.ohhs2.chatgpt.site";
 const SESSION_KEY = "our-calendar-session-v1";
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 type ApiError = Error & { status?: number };
