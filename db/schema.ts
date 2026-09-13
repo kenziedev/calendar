@@ -1,4 +1,11 @@
 import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+export const holidayCache = sqliteTable("holiday_cache", {
+  id: text("id").primaryKey(),
+  payload: text("payload").notNull(),
+  etag: text("etag").notNull().default(""),
+  updatedAt: integer("updatedAt").notNull(),
+  retryAt: integer("retryAt").notNull().default(0),
+});
 export const events = sqliteTable(
   "events",
   {

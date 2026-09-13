@@ -1,4 +1,4 @@
-# 우리의 달력
+# 공유 캘린더
 
 현쪼기·쩡개굴의 공유 캘린더. 기본 접근 주소는 **https://kenzie.kr/cal/** 입니다.
 
@@ -11,6 +11,15 @@
 - 비밀번호 인증, 기기별 세션, 잠금, 로그인 시도 제한
 - 서버 공유 저장, 15초마다/화면 복귀 시 새로고침, 동시 수정 충돌 방지
 - PC·모바일 대응, 서울 시간 기준, 키보드·스크린리더 지원
+- 토요일 파란색, 일요일·공휴일 빨간색, 공휴일 이름과 목록 표시
+
+## 공휴일 자료
+
+[holidays-kr](https://holidays.hyunbin.page)의 대한민국 공휴일 자료를 사용합니다. 월력요항을 가공한 공개 데이터이며, 정부 API와 직접 연동하지는 않습니다. 임시공휴일·대체공휴일은 제공처 자료에 추가되면 반영됩니다.
+
+인증된 조회 시 서버가 6시간 간격으로 최신 자료를 확인하고, 화면은 10분마다 또는 화면 복귀·새로고침 시 다시 가져옵니다. ETag로 변경 여부를 확인하며, 추가뿐 아니라 취소된 공휴일도 최신 자료에 맞춥니다. 제공처 장애 시 마지막 정상 자료를 유지하고 갱신 지연을 표시하며 15분 뒤 재시도합니다. 최초 조회 실패는 자료 확인 필요 상태로 표시합니다.
+
+2026-09-14 확인 기준 자료 범위는 2018–2027년입니다. 범위 밖 연도는 미제공 안내를 표시하며, 제공처가 다음 연도를 추가하면 별도 배포 없이 확장됩니다. 일정 필터와 관계없이 공휴일은 표시됩니다.
 
 ## 구성
 
@@ -32,6 +41,7 @@ cp .env.example .env
 # .env에 APP_PIN 설정
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_giant_franklin_richards.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_burly_stature.sql
 npm run dev
 ```
 

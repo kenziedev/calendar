@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "우리의 달력 | 현쪼기 & 쩡개굴",
-  description: "현쪼기와 쩡개굴이 함께 채워가는 공유 캘린더",
+  title: "공유 캘린더",
+  description: "일정 관리 및 공유",
   robots: { index: false, follow: false },
   other: {
     "codex-preview": "development",

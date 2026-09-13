@@ -13,7 +13,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Heart,
   LockKeyhole,
   ArrowRight,
   X,
@@ -46,6 +45,7 @@ import {
   type Occurrence,
 } from "../lib/calendar";
 import { registerCalendarTool } from "../lib/webmcp";
+import type { HolidayCalendar } from "../lib/holidays";
 const API_ORIGIN = "https://kenzie-our-calendar.ohhs2.chatgpt.site";
 const SESSION_KEY = "our-calendar-session-v1";
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -71,6 +71,11 @@ export default function Calendar() {
     [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState(""),
     [lastSync, setLastSync] = useState("");
+  const [holidayCalendar, setHolidayCalendar] =
+    useState<HolidayCalendar | null>(null);
+  const [holidayError, setHolidayError] = useState("");
+  const [holidayLoading, setHolidayLoading] = useState(false);
+  const holidayRequestId = useRef(0);
   const dialog = useRef<HTMLDialogElement>(null),
     returnFocus = useRef<HTMLElement | null>(null),
     requestId = useRef(0);
@@ -100,15 +105,14 @@ export default function Calendar() {
         },
         cache: "no-store",
       });
-      const data = (await response
-        .json()
-        .catch(() => ({
-          error: "서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.",
-        }))) as {
+      const data = (await response.json().catch(() => ({
+        error: "서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.",
+      }))) as {
         error?: string;
         events: CalendarEvent[];
         event: CalendarEvent;
         token: string;
+        holidayCalendar: HolidayCalendar;
       };
       if (!response.ok) {
         const e = new Error(
@@ -123,6 +127,10 @@ export default function Calendar() {
   );
   const forgetSession = useCallback(() => {
     requestId.current++;
+    holidayRequestId.current++;
+    setHolidayCalendar(null);
+    setHolidayError("");
+    setHolidayLoading(false);
     setToken("");
     setEvents([]);
     setEditing(null);
@@ -178,6 +186,41 @@ export default function Calendar() {
       window.removeEventListener("online", focus);
     };
   }, [token, refresh]);
+  const refreshHolidays = useCallback(async () => {
+    if (!token) return;
+    const id = ++holidayRequestId.current;
+    setHolidayLoading(true);
+    try {
+      const data = await api("holidays");
+      if (id !== holidayRequestId.current) return;
+      setHolidayCalendar(data.holidayCalendar);
+      setHolidayError("");
+    } catch (e) {
+      if (id !== holidayRequestId.current) return;
+      if ((e as ApiError).status === 401) forgetSession();
+      else setHolidayError("공휴일 자료 연결 실패 · 새로고침해 주세요");
+    } finally {
+      if (id === holidayRequestId.current) setHolidayLoading(false);
+    }
+  }, [api, token, forgetSession]);
+  useEffect(() => {
+    if (!token) return;
+    void refreshHolidays();
+    const focus = () => {
+      if (document.visibilityState === "visible") void refreshHolidays();
+    };
+    const timer = setInterval(focus, 10 * 60 * 1000);
+    window.addEventListener("focus", focus);
+    window.addEventListener("online", focus);
+    document.addEventListener("visibilitychange", focus);
+    return () => {
+      holidayRequestId.current++;
+      clearInterval(timer);
+      window.removeEventListener("focus", focus);
+      window.removeEventListener("online", focus);
+      document.removeEventListener("visibilitychange", focus);
+    };
+  }, [token, refreshHolidays]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 3200);
@@ -258,6 +301,28 @@ export default function Calendar() {
     () => occurrences(visible, selected, selected),
     [visible, selected],
   );
+  const holidays = holidayCalendar?.holidays ?? {};
+  const monthRows = [
+    ...inMonth.map((item) => ({
+      date: item.startDate,
+      key: item.key,
+      item,
+      names: [] as string[],
+    })),
+    ...Object.entries(holidays)
+      .filter(
+        ([date, names]) =>
+          date.slice(0, 7) === month.slice(0, 7) &&
+          (!query ||
+            names.join(" ").toLowerCase().includes(query.toLowerCase())),
+      )
+      .map(([date, names]) => ({
+        date,
+        key: `holiday-${date}`,
+        item: null,
+        names,
+      })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
   const upcoming = useMemo(
     () =>
       occurrences(
@@ -323,7 +388,7 @@ export default function Calendar() {
       setMonth(monthStart(editing.startDate));
       setEditing(null);
       setToast(
-        editing.id ? "일정을 수정했어요" : "우리의 달력에 일정을 추가했어요",
+        editing.id ? "일정을 수정했어요" : "공유 캘린더에 일정을 추가했어요",
       );
       void refresh(true);
     } catch (e) {
@@ -393,31 +458,19 @@ export default function Calendar() {
     return (
       <main className="boot">
         <CalendarDays size={34} />
-        <span>우리의 달력</span>
+        <span>공유 캘린더</span>
       </main>
     );
   if (!token)
     return (
       <main className="lock-screen">
-        <div className="lock-brand">
-          <CalendarDays size={23} />
-          <span>우리의 달력</span>
-        </div>
         <div className="login-card">
-          <div className="login-icon">
-            <Heart size={32} strokeWidth={1.7} />
-          </div>
-          <p className="eyebrow">JUST THE TWO OF US</p>
           <h1>
-            우리의 하루가
-            <br />
-            만나는 곳.
+            <CalendarDays size={25} />
+            공유 캘린더
           </h1>
-          <p className="login-description">
-            현쪼기와 쩡개굴의 달력을 열어보세요.
-          </p>
           <form onSubmit={login}>
-            <label htmlFor="pin">우리만의 비밀번호</label>
+            <label htmlFor="pin">비밀번호</label>
             <div className="pin-field">
               <LockKeyhole size={18} />
               <input
@@ -454,14 +507,7 @@ export default function Calendar() {
               )}
             </button>
           </form>
-          <div className="couple-signature">
-            <span className="avatar hyun">현</span>
-            <Heart size={13} />
-            <span className="avatar jeong">쩡</span>
-            <span>둘이 함께, 차곡차곡</span>
-          </div>
         </div>
-        <p className="lock-footer">작은 약속부터 특별한 날까지</p>
       </main>
     );
   return (
@@ -478,9 +524,7 @@ export default function Calendar() {
           <span className="brand-icon">
             <CalendarDays size={22} />
           </span>
-          <span>
-            우리의 달력<small>OUR LITTLE DAYS</small>
-          </span>
+          <span>공유 캘린더</span>
         </a>
         <button className="primary sidebar-add" onClick={() => openEditor()}>
           <Plus size={18} />새 일정
@@ -501,13 +545,17 @@ export default function Calendar() {
           </div>
           <div className="mini-grid">
             {WEEKDAYS.map((d, i) => (
-              <span className={i === 0 ? "sunday" : ""} key={d}>
+              <span
+                className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}
+                key={d}
+              >
                 {d}
               </span>
             ))}
-            {days.map((d) => (
+            {days.map((d, i) => (
               <button
-                className={`${d.slice(0, 7) !== month.slice(0, 7) ? "muted" : ""} ${d === selected ? "active" : ""} ${d === currentDay ? "is-today" : ""}`}
+                className={`${d.slice(0, 7) !== month.slice(0, 7) ? "muted" : ""} ${d === selected ? "active" : ""} ${d === currentDay ? "is-today" : ""} ${i % 7 === 0 ? "sunday" : i % 7 === 6 ? "saturday" : ""} ${holidays[d] ? "holiday" : ""}`}
+                aria-label={`작은 달력 ${longDate(d)}${holidays[d] ? `, ${holidays[d].join(" · ")}` : ""}`}
                 key={d}
                 onClick={() => {
                   setSelected(d);
@@ -519,7 +567,7 @@ export default function Calendar() {
             ))}
           </div>
         </div>
-        <div className="sidebar-label">우리의 캘린더</div>
+        <div className="sidebar-label">캘린더</div>
         <div className="owner-filters">
           {(Object.keys(PEOPLE) as Owner[]).map((owner) => (
             <button
@@ -552,7 +600,7 @@ export default function Calendar() {
         </div>
         <div className="together-section">
           <div className="sidebar-label">
-            <Heart size={13} />
+            <CalendarDays size={13} />
             다가오는 함께 일정
           </div>
           {upcoming.length ? (
@@ -571,11 +619,7 @@ export default function Calendar() {
               </button>
             ))
           ) : (
-            <p className="sidebar-empty">
-              둘이 함께할 다음 약속을
-              <br />
-              달력에 남겨보세요.
-            </p>
+            <p className="sidebar-empty">예정된 함께 일정이 없습니다.</p>
           )}
         </div>
         <div className="sidebar-bottom">
@@ -583,7 +627,7 @@ export default function Calendar() {
             <span className="avatar hyun">현</span>
             <span className="avatar jeong">쩡</span>
             <span>
-              우리 둘의 공간<small>Asia/Seoul · 서울</small>
+              공유 일정<small>Asia/Seoul · 서울</small>
             </span>
           </div>
           <button className="lock-button" onClick={logout}>
@@ -596,10 +640,10 @@ export default function Calendar() {
         <header className="topbar">
           <div className="mobile-brand">
             <CalendarDays size={21} />
-            우리의 달력
+            공유 캘린더
           </div>
           <div className="breadcrumb">
-            우리의 공간 <span>/</span> 캘린더
+            일정 관리 <span>/</span> 캘린더
           </div>
           <div className="topbar-right">
             <span className="sync-text">
@@ -611,10 +655,13 @@ export default function Calendar() {
             </span>
             <button
               className="icon-button"
-              title="일정 새로고침"
-              aria-label="일정 새로고침"
-              onClick={() => void refresh()}
-              disabled={loading}
+              title="일정 및 공휴일 새로고침"
+              aria-label="일정 및 공휴일 새로고침"
+              onClick={() => {
+                void refresh();
+                void refreshHolidays();
+              }}
+              disabled={loading || holidayLoading}
             >
               <RefreshCw size={16} className={loading ? "spin" : ""} />
             </button>
@@ -633,7 +680,7 @@ export default function Calendar() {
         </header>
         <div className="calendar-header">
           <div>
-            <p className="month-eyebrow">{month.slice(0, 4)}년, 우리의 기록</p>
+            <p className="month-eyebrow">{month.slice(0, 4)}년</p>
             <h1>
               {Number(month.slice(5, 7))}월{" "}
               <span>
@@ -684,7 +731,6 @@ export default function Calendar() {
           </div>
           <div className="month-summary">
             이번 달 일정 <strong>{inMonth.length}</strong>
-            <span>같이 채워가는 하루하루</span>
           </div>
           <div className="toolbar-right">
             <label className="search">
@@ -757,11 +803,11 @@ export default function Calendar() {
                     return (
                       <div
                         key={date}
-                        className={`day-cell ${date.slice(0, 7) !== month.slice(0, 7) ? "outside" : ""} ${date === selected ? "selected-day" : ""} ${index % 7 === 0 ? "sunday" : index % 7 === 6 ? "saturday" : ""}`}
+                        className={`day-cell ${date.slice(0, 7) !== month.slice(0, 7) ? "outside" : ""} ${date === selected ? "selected-day" : ""} ${index % 7 === 0 ? "sunday" : index % 7 === 6 ? "saturday" : ""} ${holidays[date] ? "holiday" : ""}`}
                       >
                         <button
                           className="day-hit"
-                          aria-label={`${longDate(date)}, 일정 ${items.length}개`}
+                          aria-label={`${longDate(date)}${holidays[date] ? `, 공휴일 ${holidays[date].join(" · ")}` : ""}, 일정 ${items.length}개`}
                           aria-pressed={date === selected}
                           onClick={() => setSelected(date)}
                           onDoubleClick={() => {
@@ -780,6 +826,15 @@ export default function Calendar() {
                             <span className="today-label">오늘</span>
                           )}
                         </button>
+                        {holidays[date] && (
+                          <button
+                            className="holiday-label"
+                            title={holidays[date].join(" · ")}
+                            onClick={() => setSelected(date)}
+                          >
+                            {holidays[date].join(" · ")}
+                          </button>
+                        )}
                         <div className="cell-events">
                           {items.slice(0, 3).map((o) => (
                             <button
@@ -819,23 +874,34 @@ export default function Calendar() {
               </>
             ) : (
               <div className="month-list">
-                {inMonth.length ? (
-                  inMonth.map((item) => (
-                    <div className="month-list-row" key={item.key}>
+                {monthRows.length ? (
+                  monthRows.map((row) => (
+                    <div
+                      className={`month-list-row ${row.names.length ? "holiday-row" : ""}`}
+                      key={row.key}
+                    >
                       <div>
-                        {shortDate(item.startDate)}
+                        {shortDate(row.date)}
                         <small>
                           {
                             WEEKDAYS[
-                              new Date(
-                                item.startDate + "T00:00:00Z",
-                              ).getUTCDay()
+                              new Date(row.date + "T00:00:00Z").getUTCDay()
                             ]
                           }
                           요일
                         </small>
                       </div>
-                      <EventCard item={item} />
+                      {row.item ? (
+                        <EventCard item={row.item} />
+                      ) : (
+                        <button
+                          className="holiday-list-card"
+                          onClick={() => setSelected(row.date)}
+                        >
+                          <span>공휴일</span>
+                          <strong>{row.names.join(" · ")}</strong>
+                        </button>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -849,7 +915,7 @@ export default function Calendar() {
                     <p>
                       {query
                         ? "다른 검색어로 찾아보세요."
-                        : "이달의 첫 약속을 남겨볼까요?"}
+                        : "새 일정을 추가하세요."}
                     </p>
                     {!query && (
                       <button
@@ -869,7 +935,48 @@ export default function Calendar() {
                 오늘
               </span>
               <span>모든 일정은 서울 시간 기준</span>
-              <span className="desktop-tip">날짜를 두 번 누르면 새 일정</span>
+              <span className="weekend-legend">
+                <i className="saturday" />
+                토요일 <i className="sunday" />
+                일요일·공휴일
+              </span>
+            </div>
+            <div
+              className={`holiday-status ${holidayError || holidayCalendar?.stale || (holidayCalendar && !holidayCalendar.years.includes(Number(month.slice(0, 4)))) ? "warning" : ""}`}
+              role="status"
+            >
+              <span>
+                {holidayError ||
+                  (holidayCalendar
+                    ? !holidayCalendar.years.includes(Number(month.slice(0, 4)))
+                      ? `${month.slice(0, 4)}년 공휴일 자료는 아직 제공되지 않습니다`
+                      : holidayCalendar.stale
+                        ? "공휴일 자료 갱신 지연 · 마지막 확인 자료 표시 중"
+                        : "대한민국 공휴일 · 자동 갱신"
+                    : holidayLoading
+                      ? "공휴일 불러오는 중…"
+                      : "공휴일 자료 확인 필요")}
+              </span>
+              {holidayCalendar && (
+                <span title="자료 제공처에 추가된 임시공휴일을 최대 6시간 간격으로 확인합니다.">
+                  확인{" "}
+                  {new Date(holidayCalendar.updatedAt).toLocaleString("ko-KR", {
+                    timeZone: "Asia/Seoul",
+                    month: "numeric",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  ·{" "}
+                  <a
+                    href={holidayCalendar.source}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    자료 출처
+                  </a>
+                </span>
+              )}
             </div>
           </section>
           <aside className="day-agenda">
@@ -891,6 +998,12 @@ export default function Calendar() {
                 <Plus size={20} />
               </button>
             </div>
+            {holidays[selected] && (
+              <div className="agenda-holiday">
+                <span>공휴일</span>
+                <strong>{holidays[selected].join(" · ")}</strong>
+              </div>
+            )}
             <div className="agenda-count">일정 {dayEvents.length}개</div>
             {dayEvents.length ? (
               <div className="agenda-items">
@@ -910,14 +1023,14 @@ export default function Calendar() {
                       ? "연결을 확인해 주세요"
                       : owners.length === 0
                         ? "캘린더를 선택해 주세요"
-                        : "여유로운 하루네요"}
+                        : "등록된 일정이 없습니다"}
                 </strong>
                 <p>
                   {error
                     ? "연결되면 일정을 다시 표시할게요."
                     : owners.length === 0
                       ? "보고 싶은 사람의 캘린더를 켜주세요."
-                      : "새로운 약속을 더해보세요."}
+                      : "새 일정을 추가할 수 있습니다."}
                 </p>
                 {!error && (
                   <button className="text-button" onClick={() => openEditor()}>
@@ -926,10 +1039,6 @@ export default function Calendar() {
                 )}
               </div>
             )}
-            <div className="agenda-note">
-              <Heart size={14} />
-              <span>함께하는 날이 더 많아지도록.</span>
-            </div>
           </aside>
         </div>
       </main>
@@ -957,7 +1066,7 @@ export default function Calendar() {
             <fieldset disabled={saving} className="form-fields">
               <div className="dialog-heading">
                 <div>
-                  <p>우리의 달력</p>
+                  <p>공유 캘린더</p>
                   <h2 id="dialog-title">
                     {editing.id ? "일정 수정" : "새로운 일정"}
                   </h2>
@@ -978,7 +1087,7 @@ export default function Calendar() {
               <input
                 className="event-title-input"
                 id="event-title"
-                placeholder="어떤 하루를 보낼까요?"
+                placeholder="일정 제목"
                 value={editing.title}
                 onChange={(e) => update("title", e.target.value)}
                 required
@@ -1113,7 +1222,7 @@ export default function Calendar() {
                   장소
                 </span>
                 <input
-                  placeholder="어디서 만날까요?"
+                  placeholder="장소 입력"
                   maxLength={200}
                   value={editing.location}
                   onChange={(e) => update("location", e.target.value)}
@@ -1122,7 +1231,7 @@ export default function Calendar() {
               <label className="notes-label">
                 메모
                 <textarea
-                  placeholder="기억하고 싶은 내용을 남겨주세요."
+                  placeholder="메모 입력"
                   rows={3}
                   maxLength={3000}
                   value={editing.notes}

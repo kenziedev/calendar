@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "build:pages": "vite build --config vite.static.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/calendar.test.mjs",
+    "test": "node --experimental-strip-types --test tests/calendar.test.mjs tests/holidays.test.mjs",
     "test:api": "node tests/api-smoke.mjs"
   },
   "dependencies": {

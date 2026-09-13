@@ -8,6 +8,8 @@
   --hyun: #3478d7;
   --jeong: #23866a;
   --together: #da5265;
+  --saturday: #2563c7;
+  --holiday: #d33945;
   font-family:
     -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI",
     "Malgun Gothic", sans-serif;
@@ -172,62 +174,32 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 42px 24px 24px;
-}
-.lock-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 17px;
-  font-weight: 700;
-}
-.lock-brand svg {
-  color: var(--accent);
+  padding: 24px;
 }
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 360px;
   background: white;
-  padding: 40px 38px 30px;
+  padding: 28px;
   border: 1px solid #ebecf0;
-  border-radius: 24px;
+  border-radius: 16px;
   margin: auto;
   box-shadow: 0 16px 70px #23263306;
   text-align: center;
 }
-.login-icon {
-  width: 66px;
-  height: 66px;
-  background: #fff0f1;
-  border: 1px solid #fbe0e2;
-  color: var(--accent);
-  border-radius: 20px;
+.login-card h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 25px;
-}
-.eyebrow {
-  font-size: 12px;
-  letter-spacing: 0.15em;
-  font-weight: 600;
-  color: #a0a2aa;
-  margin-bottom: 15px;
-}
-.login-card h1 {
-  font-size: 34px;
+  gap: 10px;
+  font-size: 22px;
   line-height: 1.45;
-  letter-spacing: -1.2px;
+  letter-spacing: -0.5px;
   font-weight: 700;
-}
-.login-description {
-  font-size: 14px;
-  color: var(--muted);
-  margin: 15px -10px 30px;
-  line-height: 1.6;
 }
 .login-card form {
   text-align: left;
+  margin-top: 26px;
 }
 .login-card form label {
   font-size: 14px;
@@ -270,27 +242,6 @@ button {
   height: 49px;
   justify-content: space-between;
   padding: 0 19px;
-}
-.couple-signature {
-  border-top: 1px solid var(--line);
-  margin-top: 30px;
-  padding-top: 23px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  color: #aaa;
-}
-.couple-signature > span:last-child {
-  font-size: 12px;
-  margin-left: 6px;
-  color: #8b8d98;
-}
-.lock-footer {
-  color: #a0a2ac;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  margin-top: 20px;
 }
 .app-shell {
   display: grid;
@@ -1814,17 +1765,10 @@ button {
     padding: 30px 20px 20px;
   }
   .login-card {
-    padding: 33px 28px 28px;
-    max-width: 380px;
+    padding: 28px 24px;
   }
   .login-card h1 {
-    font-size: 32px;
-  }
-  .lock-brand {
-    margin-bottom: 30px;
-  }
-  .lock-footer {
-    margin-top: 30px;
+    font-size: 22px;
   }
 }
 @media (max-width: 370px) {
@@ -1942,5 +1886,124 @@ button {
 @media (max-width: 370px) {
   .date-fields {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Weekends and public holidays remain visible in both calendars. */
+.weekdays .saturday,
+.mini-grid > .saturday,
+.mini-grid button.saturday:not(.active):not(.holiday),
+.day-cell.saturday:not(.holiday) .day-number:not(.today-number) {
+  color: var(--saturday);
+}
+.weekdays .sunday,
+.mini-grid > .sunday,
+.mini-grid button.sunday:not(.active),
+.mini-grid button.holiday:not(.active),
+.day-cell.sunday .day-number:not(.today-number),
+.day-cell.holiday .day-number:not(.today-number) {
+  color: var(--holiday);
+}
+.mini-grid button.active {
+  color: white;
+}
+.mini-grid button.muted,
+.day-cell.outside .day-number {
+  opacity: 0.5;
+}
+.holiday-label {
+  display: block;
+  max-width: 100%;
+  padding: 0 5px 5px;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--holiday);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agenda-holiday {
+  background: #fff3f3;
+  color: var(--holiday);
+  border-radius: 9px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 18px;
+}
+.agenda-holiday span,
+.holiday-list-card span {
+  font-size: 11px;
+}
+.agenda-holiday strong,
+.holiday-list-card strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.holiday-list-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  text-align: left;
+  padding: 13px 15px;
+  background: #fff5f5;
+  border-radius: 9px;
+  color: var(--holiday);
+}
+.month-list-row.holiday-row > div {
+  color: var(--holiday);
+}
+.calendar-footnote {
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.weekend-legend {
+  margin-left: auto;
+}
+.weekend-legend i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.weekend-legend i.saturday {
+  background: var(--saturday);
+}
+.weekend-legend i.sunday {
+  background: var(--holiday);
+  margin-left: 4px;
+}
+.holiday-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 14px;
+  padding: 0 20px 13px;
+  color: #81848f;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.holiday-status a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.holiday-status.warning {
+  color: #a36520;
+}
+@media (max-width: 700px) {
+  .holiday-label {
+    font-size: 10px;
+    padding: 0 2px 3px;
+  }
+  .calendar-footnote {
+    padding: 12px;
+    gap: 8px 12px;
+    font-size: 10px;
+  }
+  .holiday-status {
+    padding: 0 12px 12px;
+    font-size: 10px;
   }
 }

@@ -28,6 +28,8 @@ async function call(path, method = "GET", body, token, origin = allowedOrigin) {
 }
 try {
   assert.equal((await call("events")).status, 401);
+  assert.equal((await call("holidays")).status, 401);
+  assert.equal((await call("holidays", "OPTIONS")).status, 204);
   assert.equal((await call("events", "POST", {})).status, 401);
   assert.equal((await call("events", "OPTIONS")).status, 204);
   assert.equal(
@@ -50,6 +52,21 @@ try {
   assert.equal(loginB.status, 200);
   b = loginB.data.token;
   assert.notEqual(a, b);
+  const publicHolidays = await call("holidays", "GET", undefined, a);
+  assert.equal(publicHolidays.status, 200);
+  assert.equal(
+    publicHolidays.headers.get("access-control-allow-origin"),
+    allowedOrigin,
+  );
+  const holidayData = publicHolidays.data.holidayCalendar;
+  assert.ok(holidayData.years.includes(2026));
+  assert.deepEqual(holidayData.holidays["2025-05-05"], [
+    "어린이날",
+    "부처님 오신 날",
+  ]);
+  assert.ok(holidayData.holidays["2025-01-27"].includes("임시공휴일"));
+  assert.ok(holidayData.holidays["2026-09-26"]);
+  assert.ok(holidayData.updatedAt > 0);
   const draft = {
     createId: crypto.randomUUID(),
     title: "[자동 검증] 공유 일정",

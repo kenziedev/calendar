@@ -1,7 +1,7 @@
 export const PEOPLE = {
   hyun: { name: "현쪼기", initial: "현", color: "#3478d7", tint: "#edf4ff" },
   jeong: { name: "쩡개굴", initial: "쩡", color: "#23866a", tint: "#eaf7f1" },
-  together: { name: "함께", initial: "♥", color: "#da5265", tint: "#fff0f2" },
+  together: { name: "함께", initial: "함", color: "#da5265", tint: "#fff0f2" },
 } as const;
 export type Owner = keyof typeof PEOPLE;
 export type Repeat = "none" | "daily" | "weekly" | "monthly" | "yearly";

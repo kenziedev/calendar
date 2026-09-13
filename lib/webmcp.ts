@@ -29,7 +29,7 @@ export function registerCalendarTool(readEvents: () => CalendarEvent[]) {
           name: "read_calendar_schedule",
           title: "공유 일정 조회",
           description:
-            "열려 있는 우리의 달력에서 지정한 날짜 범위의 현쪼기·쩡개굴·함께 일정을 읽습니다. 일정을 변경하지 않습니다.",
+            "열려 있는 공유 캘린더에서 지정한 날짜 범위의 현쪼기·쩡개굴·함께 일정을 읽습니다. 일정을 변경하지 않습니다.",
           inputSchema: {
             type: "object",
             properties: {
