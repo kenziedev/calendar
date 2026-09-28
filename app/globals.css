@@ -849,13 +849,20 @@ button {
 .agenda-card {
   width: 100%;
   display: flex;
+  flex-direction: column;
+  background: var(--tint);
+  border-radius: 10px;
+  position: relative;
+  min-width: 0;
+}
+.agenda-open {
+  width: 100%;
+  display: flex;
   align-items: flex-start;
   gap: 9px;
   text-align: left;
   padding: 15px 11px;
-  background: var(--tint);
   border-radius: 10px;
-  position: relative;
 }
 .agenda-card:hover {
   box-shadow: 0 3px 12px #23273809;
@@ -905,6 +912,51 @@ button {
   align-items: center;
   gap: 3px;
   overflow-wrap: anywhere;
+}
+.event-map-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  margin: 0 11px 8px;
+  padding: 10px 0 2px;
+  border-top: 1px solid #0000000d;
+  color: #18734f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.event-map-link > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.event-map-link small {
+  display: block;
+  font-size: 12px;
+  margin-top: 3px;
+}
+.event-map-link:hover > span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.location-map-action {
+  display: flex;
+  justify-content: flex-end;
+  margin: -4px 0 12px;
+}
+.location-map-action a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #edf7f1;
+  color: #18734f;
+  font-size: 14px;
+}
+.location-map-action a:hover {
+  background: #e1f0e7;
 }
 .card-arrow {
   margin-top: 4px;
@@ -1635,7 +1687,7 @@ button {
     display: flex;
     gap: 10px;
   }
-  .agenda-card {
+  .agenda-open {
     padding: 16px;
     gap: 12px;
     border-radius: 12px;
