@@ -6,10 +6,12 @@ import type { PlaceResult, PlaceSearch } from "../lib/places";
 export default function PlacePicker({
   value,
   onChange,
+  onSelect,
   search,
 }: {
   value: string;
   onChange: (value: string) => void;
+  onSelect: (place: PlaceResult) => void;
   search: (query: string, signal: AbortSignal) => Promise<PlaceSearch>;
 }) {
   const id = useId();
@@ -67,7 +69,7 @@ export default function PlacePicker({
   const show = eligible;
   const select = (place: PlaceResult) => {
     pending.current?.abort();
-    onChange(place.location);
+    onSelect(place);
     setDismissed(true);
     setResults([]);
     input.current?.focus();

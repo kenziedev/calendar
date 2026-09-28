@@ -20,6 +20,7 @@ export const events = sqliteTable(
     repeat: text("repeat").notNull().default("none"),
     repeatUntil: text("repeatUntil").notNull().default(""),
     location: text("location").notNull().default(""),
+    locationPoint: text("locationPoint"),
     notes: text("notes").notNull().default(""),
     version: integer("version").notNull().default(1),
     createdAt: integer("createdAt").notNull(),

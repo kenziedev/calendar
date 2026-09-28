@@ -961,6 +961,58 @@ button {
 .place-picker {
   min-width: 0;
 }
+.place-map {
+  min-width: 0;
+  margin: 10px 0 14px;
+  border: 1px solid #dce2e9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.agenda-card > .place-map {
+  margin: 0 11px 11px;
+}
+.place-map-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 11px;
+  font-size: 14px;
+  color: #445268;
+  text-align: left;
+}
+.place-map-toggle span {
+  flex: 1;
+}
+.place-map-toggle:hover {
+  background: #f5f7fa;
+}
+.place-map-frame {
+  display: block;
+  border: 0;
+  border-top: 1px solid #e8ecf0;
+  width: 100%;
+  height: 200px;
+  background: #edf1f4;
+}
+.agenda-card .place-map-frame {
+  height: 170px;
+}
+.place-map-credit {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 10px;
+  margin: 0;
+  color: #6b7482;
+  font-size: 12px;
+}
+.place-map-credit a {
+  text-decoration: underline;
+}
 .place-picker .form-row {
   display: block;
 }

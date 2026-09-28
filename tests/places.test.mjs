@@ -2,6 +2,36 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { normalizePlaces, searchNaverPlaces } from "../lib/places.ts";
 import { naverMapUrl } from "../lib/maps.ts";
+import { naverMapPoint, validMapPoint } from "../lib/coordinates.ts";
+
+test("Naver coordinates accept current scaled WGS84 and decimal WGS84, reject absent or legacy values", () => {
+  const point = { longitude: 126.9768428, latitude: 37.5760259 };
+  assert.deepEqual(naverMapPoint("1269768428", "375760259"), point);
+  assert.deepEqual(naverMapPoint("126.9768428", "37.5760259"), point);
+  for (const [x, y] of [
+    ["", ""],
+    [undefined, undefined],
+    ["NaN", "37"],
+    ["Infinity", "37"],
+    ["311277", "552097"],
+    ["0", "0"],
+    ["1900000000", "375760259"],
+    [true, 37],
+  ])
+    assert.equal(naverMapPoint(x, y), null);
+  assert.equal(validMapPoint({ latitude: "37", longitude: 127 }), false);
+  const [place] = normalizePlaces({
+    items: [
+      {
+        title: "광화문",
+        roadAddress: "서울특별시 종로구",
+        mapx: "1269768428",
+        mapy: "375760259",
+      },
+    ],
+  });
+  assert.deepEqual(place.point, point);
+});
 
 test("saved place selections open Maps using the place name, excluding display address", () => {
   const [place] = normalizePlaces({

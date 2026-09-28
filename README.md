@@ -13,10 +13,16 @@
 - PC·모바일 대응, 서울 시간 기준, 키보드·스크린리더 지원
 - 토요일 파란색, 일요일·공휴일 빨간색, 공휴일 이름과 목록 표시
 - 장소를 누르면 네이버 지도 열기: 장소명·주소 검색 및 네이버 지도 공유 링크 지원
+- 장소 검색 결과 선택 시 작은 지도 미리보기, 저장한 일정에서 접기·펼치기
 
 일정의 장소 입력란에 장소명이나 주소를 넣으면 `네이버 지도에서 보기`가 표시됩니다. 저장 후에는 날짜별 일정과 월 목록에서도 바로 열 수 있습니다. `https://naver.me/...`, `https://map.naver.com/...` 공유 링크도 그대로 연결됩니다. 모바일 앱 연결은 네이버와 기기 설정에 따라 처리됩니다. 장소 검색에서 선택한 이름·주소는 기존 장소 필드에 저장하고, 지도 검색에는 장소명만 전달합니다. 이미 저장된 선택 결과에도 적용됩니다. 같은 이름의 장소가 여러 개이면 지도 검색 결과에서 지점을 확인할 수 있습니다.
 
 ## 장소 검색 설정
+
+작은 지도는 별도 키 없이 OpenStreetMap 공식 임베드를 사용합니다. 검색 결과의 실제 WGS84 좌표를 `locationPoint`로 일정에 함께 저장하고, 작성 화면 및 일정 카드에서 주변 지도를 표시합니다. 일정 카드의 `작은 지도 보기`를 눌렀을 때만 지도를 불러옵니다. 기존 장소 텍스트나 직접 입력·공유 링크에는 좌표를 추측해 붙이지 않으며, 검색 결과에서 다시 선택해 저장하면 미리보기를 사용할 수 있습니다. 장소를 직접 수정하면 이전 좌표를 제거합니다. 구버전 앱이 좌표 없이 다른 항목만 수정하면 기존 좌표는 유지됩니다.
+
+- [OSM 공식 임베드 안내](https://wiki.openstreetmap.org/wiki/Export#Embeddable_HTML)
+- [네이버 지역 검색 좌표](https://api.ncloud-docs.com/docs/naver-api-hub-search-local), [WGS84 좌표 변경 안내](https://developers.naver.com/notice/article/12567)
 
 입력 중 네이버 검색 결과를 표시하고 장소명·주소를 선택합니다. 2026-09-28에 API HUB 앱 `kenzie-calendar`의 지역 검색 연결과 실제 결과 선택·저장을 검증했습니다. 운영 키는 서버의 비밀 환경변수로 관리합니다.
 
@@ -66,6 +72,7 @@ cp .env.example .env
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_giant_franklin_richards.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_burly_stature.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_chief_banshee.sql
 npm run dev
 ```
 
@@ -78,6 +85,8 @@ npm run typecheck
 npm test
 # APP_PIN 환경변수 설정 후
 npm run test:api
+# 로컬 좌표 저장·구버전 앱 호환 검증
+node --env-file=.env tests/map-persistence.mjs
 # 배포 API에 대한 연동 검증
 node tests/api-smoke.mjs https://kenzie-our-calendar.ohhs2.chatgpt.site
 ```

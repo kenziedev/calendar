@@ -131,9 +131,27 @@ export const eventSchema = z
     repeat: z.enum(["none", "daily", "weekly", "monthly", "yearly"]),
     repeatUntil: z.union([z.literal(""), date]),
     location: z.string().trim().max(200),
+    locationPoint: z
+      .object({
+        latitude: z.number().finite().min(-90).max(90),
+        longitude: z.number().finite().min(-180).max(180),
+      })
+      .strict()
+      .nullable()
+      .optional(),
     notes: z.string().trim().max(3000),
   })
   .superRefine((e, ctx) => {
+    if (
+      e.locationPoint &&
+      (!e.location ||
+        (e.locationPoint.latitude === 0 && e.locationPoint.longitude === 0))
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "지도 위치를 다시 선택해 주세요.",
+        path: ["locationPoint"],
+      });
     if (
       e.endDate < e.startDate ||
       (!e.allDay && e.endDate === e.startDate && e.endTime <= e.startTime)

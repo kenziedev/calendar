@@ -8,13 +8,24 @@ import {
   HttpError,
 } from "../../../lib/server";
 import { z } from "zod";
+import { validMapPoint } from "../../../lib/coordinates";
 export const dynamic = "force-dynamic";
 const columns =
-  "id, title, owner, startDate, endDate, startTime, endTime, allDay, repeat, repeatUntil, location, notes, version";
-const toEvent = (row: Record<string, unknown>) => ({
-  ...row,
-  allDay: !!row.allDay,
-});
+  "id, title, owner, startDate, endDate, startTime, endTime, allDay, repeat, repeatUntil, location, locationPoint, notes, version";
+const toEvent = (row: Record<string, unknown>) => {
+  let point: unknown = null;
+  try {
+    point =
+      typeof row.locationPoint === "string"
+        ? JSON.parse(row.locationPoint)
+        : null;
+  } catch {}
+  return {
+    ...row,
+    allDay: !!row.allDay,
+    locationPoint: validMapPoint(point) ? point : null,
+  };
+};
 export async function OPTIONS(request: Request) {
   return handle(request, async () => ({}));
 }
@@ -36,7 +47,7 @@ export async function POST(request: Request) {
       now = Date.now();
     await database()
       .prepare(
-        "INSERT INTO events (id, title, owner, startDate, endDate, startTime, endTime, allDay, repeat, repeatUntil, location, notes, version, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?) ON CONFLICT(id) DO NOTHING",
+        "INSERT INTO events (id, title, owner, startDate, endDate, startTime, endTime, allDay, repeat, repeatUntil, location, locationPoint, notes, version, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?) ON CONFLICT(id) DO NOTHING",
       )
       .bind(
         id,
@@ -50,6 +61,7 @@ export async function POST(request: Request) {
         e.repeat,
         e.repeat === "none" ? "" : e.repeatUntil,
         e.location,
+        e.locationPoint ? JSON.stringify(e.locationPoint) : null,
         e.notes,
         now,
         now,
@@ -71,7 +83,7 @@ export async function PATCH(request: Request) {
       { id, version } = identitySchema.parse(input);
     const row = await database()
       .prepare(
-        `UPDATE events SET title = ?, owner = ?, startDate = ?, endDate = ?, startTime = ?, endTime = ?, allDay = ?, repeat = ?, repeatUntil = ?, location = ?, notes = ?, version = version + 1, updatedAt = ? WHERE id = ? AND version = ? RETURNING ${columns}`,
+        `UPDATE events SET title = ?, owner = ?, startDate = ?, endDate = ?, startTime = ?, endTime = ?, allDay = ?, repeat = ?, repeatUntil = ?, locationPoint = CASE WHEN ? THEN ? WHEN location = ? THEN locationPoint ELSE NULL END, location = ?, notes = ?, version = version + 1, updatedAt = ? WHERE id = ? AND version = ? RETURNING ${columns}`,
       )
       .bind(
         e.title,
@@ -83,6 +95,9 @@ export async function PATCH(request: Request) {
         Number(e.allDay),
         e.repeat,
         e.repeat === "none" ? "" : e.repeatUntil,
+        Number(e.locationPoint !== undefined),
+        e.locationPoint ? JSON.stringify(e.locationPoint) : null,
+        e.location,
         e.location,
         e.notes,
         Date.now(),

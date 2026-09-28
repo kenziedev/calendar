@@ -15,6 +15,13 @@
       "when": 1789336687119,
       "tag": "0001_burly_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790578033216,
+      "tag": "0002_chief_banshee",
+      "breakpoints": true
     }
   ]
 }

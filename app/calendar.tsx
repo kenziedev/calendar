@@ -49,11 +49,63 @@ import { registerCalendarTool } from "../lib/webmcp";
 import type { HolidayCalendar } from "../lib/holidays";
 import { naverMapUrl } from "../lib/maps";
 import PlacePicker from "./place-picker";
+import PlaceMap from "./place-map";
 import type { PlaceSearch } from "../lib/places";
 const API_ORIGIN = "https://kenzie-our-calendar.ohhs2.chatgpt.site";
 const SESSION_KEY = "our-calendar-session-v1";
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 type ApiError = Error & { status?: number };
+function EventCard({
+  item,
+  onEdit,
+}: {
+  item: Occurrence;
+  onEdit: (event: CalendarEvent) => void;
+}) {
+  return (
+    <article className={`agenda-card ${item.event.owner}`}>
+      <button className="agenda-open" onClick={() => onEdit(item.event)}>
+        <span className="agenda-time">
+          {item.event.allDay ? "종일" : item.event.startTime}
+          <span>{item.event.allDay ? "" : item.event.endTime}</span>
+        </span>
+        <span className="agenda-content">
+          <strong>{item.event.title}</strong>
+          <span className="event-owner">
+            {PEOPLE[item.event.owner].name}
+            {item.event.repeat !== "none" && <Repeat2 size={12} />}
+          </span>
+          {item.startDate !== item.endDate && (
+            <span className="event-location">
+              {shortDate(item.startDate)} – {shortDate(item.endDate)}
+            </span>
+          )}
+        </span>
+        <ChevronRight size={15} className="card-arrow" />
+      </button>
+      {naverMapUrl(item.event.location) && (
+        <a
+          className="event-map-link"
+          href={naverMapUrl(item.event.location)!}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${item.event.location} 네이버 지도에서 보기 (새 창)`}
+        >
+          <MapPin size={15} />
+          <span>
+            {item.event.location}
+            <small>네이버 지도에서 보기</small>
+          </span>
+          <ExternalLink size={14} />
+        </a>
+      )}
+      <PlaceMap
+        point={item.event.locationPoint}
+        location={item.event.location}
+      />
+    </article>
+  );
+}
 export default function Calendar() {
   const [ready, setReady] = useState(false),
     [token, setToken] = useState("");
@@ -440,45 +492,6 @@ export default function Calendar() {
       setSaving(false);
     }
   }
-  const EventCard = ({ item }: { item: Occurrence }) => (
-    <article className={`agenda-card ${item.event.owner}`}>
-      <button className="agenda-open" onClick={() => openEditor(item.event)}>
-        <span className="agenda-time">
-          {item.event.allDay ? "종일" : item.event.startTime}
-          <span>{item.event.allDay ? "" : item.event.endTime}</span>
-        </span>
-        <span className="agenda-content">
-          <strong>{item.event.title}</strong>
-          <span className="event-owner">
-            {PEOPLE[item.event.owner].name}
-            {item.event.repeat !== "none" && <Repeat2 size={12} />}
-          </span>
-          {item.startDate !== item.endDate && (
-            <span className="event-location">
-              {shortDate(item.startDate)} – {shortDate(item.endDate)}
-            </span>
-          )}
-        </span>
-        <ChevronRight size={15} className="card-arrow" />
-      </button>
-      {naverMapUrl(item.event.location) && (
-        <a
-          className="event-map-link"
-          href={naverMapUrl(item.event.location)!}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`${item.event.location} 네이버 지도에서 보기 (새 창)`}
-        >
-          <MapPin size={15} />
-          <span>
-            {item.event.location}
-            <small>네이버 지도에서 보기</small>
-          </span>
-          <ExternalLink size={14} />
-        </a>
-      )}
-    </article>
-  );
   if (!ready)
     return (
       <main className="boot">
@@ -917,7 +930,7 @@ export default function Calendar() {
                         </small>
                       </div>
                       {row.item ? (
-                        <EventCard item={row.item} />
+                        <EventCard item={row.item} onEdit={openEditor} />
                       ) : (
                         <button
                           className="holiday-list-card"
@@ -1033,7 +1046,7 @@ export default function Calendar() {
             {dayEvents.length ? (
               <div className="agenda-items">
                 {dayEvents.map((o) => (
-                  <EventCard key={o.key} item={o} />
+                  <EventCard key={o.key} item={o} onEdit={openEditor} />
                 ))}
               </div>
             ) : (
@@ -1243,9 +1256,38 @@ export default function Calendar() {
               )}
               <PlacePicker
                 value={editing.location}
-                onChange={(value) => update("location", value)}
+                onChange={(value) =>
+                  setEditing(
+                    (current) =>
+                      current && {
+                        ...current,
+                        location: value,
+                        locationPoint: null,
+                      },
+                  )
+                }
+                onSelect={(place) =>
+                  setEditing(
+                    (current) =>
+                      current && {
+                        ...current,
+                        location: place.location,
+                        locationPoint: place.point,
+                      },
+                  )
+                }
                 search={searchPlaces}
               />
+              <PlaceMap
+                point={editing.locationPoint}
+                location={editing.location}
+                expanded
+              />
+              {editing.location.trim() && !editing.locationPoint && (
+                <p className="place-hint">
+                  작은 지도를 보려면 장소 검색 결과에서 위치를 선택해 주세요.
+                </p>
+              )}
               {naverMapUrl(editing.location) && (
                 <div className="location-map-action">
                   <a

@@ -1,3 +1,5 @@
+import type { MapPoint } from "./coordinates";
+
 export const PEOPLE = {
   hyun: { name: "현쪼기", initial: "현", color: "#3478d7", tint: "#edf4ff" },
   jeong: { name: "쩡개굴", initial: "쩡", color: "#23866a", tint: "#eaf7f1" },
@@ -25,6 +27,7 @@ export type CalendarEvent = {
   repeat: Repeat;
   repeatUntil: string;
   location: string;
+  locationPoint: MapPoint | null;
   notes: string;
   version: number;
 };
@@ -147,6 +150,7 @@ export function newEvent(date: string, owner: Owner = "hyun"): CalendarEvent {
     repeat: "none",
     repeatUntil: "",
     location: "",
+    locationPoint: null,
     notes: "",
     version: 0,
   };

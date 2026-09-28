@@ -1,8 +1,11 @@
+import { naverMapPoint, type MapPoint } from "./coordinates.ts";
+
 export type PlaceResult = {
   name: string;
   address: string;
   category: string;
   location: string;
+  point: MapPoint | null;
 };
 export type PlaceSearch = { enabled: boolean; places: PlaceResult[] };
 
@@ -58,6 +61,7 @@ export function normalizePlaces(data: unknown): PlaceResult[] {
       address,
       location,
       category: plainText(item.category, 100),
+      point: naverMapPoint(item.mapx, item.mapy),
     });
   }
   return [...unique.values()];
