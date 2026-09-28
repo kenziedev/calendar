@@ -99,6 +99,8 @@ Sites 버전 7 배포 성공(소스 `1307b620d6b025e1dd45d61515a5f329b9bf2713`, 
 - [x] 변경 모드 진입만으로 기존 좌표를 지우지 않고 선택·수정 동작 유지.
 - [x] 실제 장소 검색·선택, 모바일 390px·320px와 PC 1440px에서 200자/공백 없는 주소 표시·저장·재편집 확인. 검증용 로컬 일정 정리.
 - [x] 타입 검사, 장소 회귀 테스트 6개, 서버·정적 화면 빌드 통과.
-- [ ] 운영 주소 배포.
+- [x] 운영 주소 배포.
 
 확인 화면: `outputs/place-ui-mobile.png`, `outputs/place-ui-long-desktop.png`.
+
+Sites 버전 8 배포 성공(소스 `06c2cfa5a096a082aea3bca8916f019657880296`). GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36389955527
