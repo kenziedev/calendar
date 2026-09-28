@@ -1,6 +1,57 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { normalizePlaces, searchNaverPlaces } from "../lib/places.ts";
+import { naverMapUrl } from "../lib/maps.ts";
+
+test("saved place selections open Maps using the place name, excluding display address", () => {
+  const [place] = normalizePlaces({
+    items: [
+      {
+        title: "광화문",
+        roadAddress: "서울특별시 종로구 효자로 12 국립고궁박물관",
+      },
+    ],
+  });
+  assert.equal(
+    naverMapUrl(place.location),
+    "https://map.naver.com/p/search/" + encodeURIComponent("광화문"),
+  );
+  for (const address of [
+    "서울 종로구 사직로 161",
+    "경기도 고양시 일산동구 중앙로 1 2층",
+    "강원특별자치도 춘천시 중앙로 1",
+    "전북특별자치도 전주시 완산구 중앙동 1",
+    "제주특별자치도 제주시 중앙로 1",
+  ]) {
+    assert.equal(
+      naverMapUrl(`카페 · 바 & 쉼 · ${address}`),
+      "https://map.naver.com/p/search/" + encodeURIComponent("카페 · 바 & 쉼"),
+    );
+  }
+});
+
+test("Maps preserves manual names, addresses and trusted share links", () => {
+  assert.equal(naverMapUrl("  "), null);
+  for (const query of [
+    "광화문",
+    "서울특별시 종로구 사직로 161",
+    "카페 · 2층",
+    "약속 · 서울역 근처",
+    "https://example.com/?q=서울",
+  ]) {
+    assert.equal(
+      naverMapUrl(query),
+      "https://map.naver.com/p/search/" + encodeURIComponent(query),
+    );
+  }
+  for (const link of [
+    "https://naver.me/example",
+    "https://map.naver.com/p/search/광화문",
+    "https://m.map.naver.com/search2/search.naver?query=서울역",
+  ]) {
+    assert.equal(naverMapUrl(link), new URL(link).href);
+  }
+});
 
 test("place selection strips provider markup, prefers road address and stays within storage limit", () => {
   const places = normalizePlaces({
