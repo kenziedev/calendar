@@ -91,3 +91,14 @@ Sites 버전 6 배포 성공(소스 `378ecdceefbe6110f14a2e3812930f2e33d44038`).
 확인 화면: `outputs/inline-map-desktop.png`, `outputs/inline-map-mobile.png`. 네이버 Maps 별도 신청 없이 기본 지도로 구현했으며 기존 네이버 지도 링크를 유지한다.
 
 Sites 버전 7 배포 성공(소스 `1307b620d6b025e1dd45d61515a5f329b9bf2713`, 마이그레이션 0002 포함). 이후 GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36389107718
+
+## 2026-09-28 긴 장소·주소 표시 정리
+
+- [x] 선택한 장소는 한 줄 입력칸 대신 장소명·주소가 나뉜 카드로 표시. 변경 버튼으로 편집하고 직접 입력 완료 지원.
+- [x] 장소 입력·검색 결과·요약 카드·일정 카드의 너비 제한과 긴 문구 줄바꿈 정리.
+- [x] 변경 모드 진입만으로 기존 좌표를 지우지 않고 선택·수정 동작 유지.
+- [x] 실제 장소 검색·선택, 모바일 390px·320px와 PC 1440px에서 200자/공백 없는 주소 표시·저장·재편집 확인. 검증용 로컬 일정 정리.
+- [x] 타입 검사, 장소 회귀 테스트 6개, 서버·정적 화면 빌드 통과.
+- [ ] 운영 주소 배포.
+
+확인 화면: `outputs/place-ui-mobile.png`, `outputs/place-ui-long-desktop.png`.

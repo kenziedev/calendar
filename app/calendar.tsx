@@ -47,7 +47,7 @@ import {
 } from "../lib/calendar";
 import { registerCalendarTool } from "../lib/webmcp";
 import type { HolidayCalendar } from "../lib/holidays";
-import { naverMapUrl } from "../lib/maps";
+import { naverMapUrl, placeDisplay } from "../lib/maps";
 import PlacePicker from "./place-picker";
 import PlaceMap from "./place-map";
 import type { PlaceSearch } from "../lib/places";
@@ -62,6 +62,7 @@ function EventCard({
   item: Occurrence;
   onEdit: (event: CalendarEvent) => void;
 }) {
+  const place = placeDisplay(item.event.location);
   return (
     <article className={`agenda-card ${item.event.owner}`}>
       <button className="agenda-open" onClick={() => onEdit(item.event)}>
@@ -93,7 +94,10 @@ function EventCard({
         >
           <MapPin size={15} />
           <span>
-            {item.event.location}
+            <strong className="event-place-name">{place.name}</strong>
+            {place.address && (
+              <span className="event-place-address">{place.address}</span>
+            )}
             <small>네이버 지도에서 보기</small>
           </span>
           <ExternalLink size={14} />

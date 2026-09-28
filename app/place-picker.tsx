@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
-import { MapPin, Search, LoaderCircle } from "lucide-react";
+import { MapPin, Search, LoaderCircle, Pencil, Check } from "lucide-react";
 import type { PlaceResult, PlaceSearch } from "../lib/places";
+import { placeDisplay } from "../lib/maps";
 
 export default function PlacePicker({
   value,
@@ -16,6 +17,9 @@ export default function PlacePicker({
 }) {
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
+  const changeButton = useRef<HTMLButtonElement>(null);
+  const nextFocus = useRef<"input" | "change" | null>(null);
+  const [editing, setEditing] = useState(!value.trim());
   const pending = useRef<AbortController | null>(null);
   const [focused, setFocused] = useState(false);
   const [composing, setComposing] = useState(false);
@@ -27,7 +31,16 @@ export default function PlacePicker({
   >("idle");
   const [unavailable, setUnavailable] = useState(false);
   const query = value.trim();
+  const display = placeDisplay(value);
+  useEffect(() => {
+    if (nextFocus.current === "input") {
+      input.current?.focus();
+      input.current?.select();
+    } else if (nextFocus.current === "change") changeButton.current?.focus();
+    nextFocus.current = null;
+  }, [editing]);
   const eligible =
+    editing &&
     focused &&
     !dismissed &&
     !composing &&
@@ -72,7 +85,9 @@ export default function PlacePicker({
     onSelect(place);
     setDismissed(true);
     setResults([]);
-    input.current?.focus();
+    setFocused(false);
+    nextFocus.current = "change";
+    setEditing(false);
   };
   return (
     <div
@@ -84,63 +99,113 @@ export default function PlacePicker({
         }
       }}
     >
-      <label className="form-row" htmlFor={id}>
-        <span>
+      <div className="place-field-heading">
+        <label id={`${id}-label`} htmlFor={editing ? id : undefined}>
           <MapPin size={17} />
           장소
-        </span>
-        <input
-          id={id}
-          ref={input}
-          role="combobox"
-          autoComplete="off"
-          placeholder="장소명·주소 검색 또는 지도 링크"
-          maxLength={200}
-          value={value}
-          aria-autocomplete="list"
-          aria-expanded={show && results.length > 0}
-          aria-controls={show && results.length ? `${id}-results` : undefined}
-          aria-activedescendant={
-            show && results[active] ? `${id}-option-${active}` : undefined
-          }
-          aria-describedby={`${id}-hint`}
-          onChange={(event) => {
-            pending.current?.abort();
-            onChange(event.target.value);
-            setDismissed(false);
-            setActive(-1);
-            setResults([]);
-          }}
-          onFocus={() => setFocused(true)}
-          onCompositionStart={() => {
-            pending.current?.abort();
-            setComposing(true);
-          }}
-          onCompositionEnd={() => setComposing(false)}
-          onKeyDown={(event) => {
-            if (event.nativeEvent.isComposing) return;
-            if (event.key === "Escape" && !dismissed) {
-              event.preventDefault();
-              event.stopPropagation();
-              pending.current?.abort();
-              setDismissed(true);
-            } else if (show && event.key === "ArrowDown") {
-              event.preventDefault();
-              setActive((index) => Math.min(index + 1, results.length - 1));
-            } else if (show && event.key === "ArrowUp") {
-              event.preventDefault();
-              setActive((index) => Math.max(index - 1, 0));
-            } else if (event.key === "Enter") {
-              event.preventDefault();
-              if (show && results[active]) select(results[active]);
-              else setDismissed(false);
+        </label>
+        {!editing && (
+          <button
+            ref={changeButton}
+            type="button"
+            className="place-edit"
+            onClick={() => {
+              nextFocus.current = "input";
+              setEditing(true);
+            }}
+          >
+            <Pencil size={14} />
+            장소 변경
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <>
+          <input
+            className="place-input"
+            id={id}
+            ref={input}
+            role="combobox"
+            autoComplete="off"
+            placeholder="장소명·주소 검색 또는 지도 링크"
+            maxLength={200}
+            value={value}
+            aria-autocomplete="list"
+            aria-expanded={show && results.length > 0}
+            aria-controls={show && results.length ? `${id}-results` : undefined}
+            aria-activedescendant={
+              show && results[active] ? `${id}-option-${active}` : undefined
             }
-          }}
-        />
-      </label>
-      <p id={`${id}-hint`} className="place-hint">
-        장소명을 입력하면 네이버 검색 결과를 선택할 수 있습니다.
-      </p>
+            aria-describedby={`${id}-hint`}
+            onChange={(event) => {
+              pending.current?.abort();
+              onChange(event.target.value);
+              setDismissed(false);
+              setActive(-1);
+              setResults([]);
+            }}
+            onFocus={() => setFocused(true)}
+            onCompositionStart={() => {
+              pending.current?.abort();
+              setComposing(true);
+            }}
+            onCompositionEnd={() => setComposing(false)}
+            onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing) return;
+              if (event.key === "Escape" && !dismissed) {
+                event.preventDefault();
+                event.stopPropagation();
+                pending.current?.abort();
+                setDismissed(true);
+              } else if (show && event.key === "ArrowDown") {
+                event.preventDefault();
+                setActive((index) => Math.min(index + 1, results.length - 1));
+              } else if (show && event.key === "ArrowUp") {
+                event.preventDefault();
+                setActive((index) => Math.max(index - 1, 0));
+              } else if (event.key === "Enter") {
+                event.preventDefault();
+                if (show && results[active]) select(results[active]);
+                else setDismissed(false);
+              }
+            }}
+          />
+          <div className="place-input-help">
+            <p id={`${id}-hint`} className="place-hint">
+              검색 결과를 선택하거나 직접 입력해 주세요.
+            </p>
+            {value.trim() && (
+              <button
+                type="button"
+                className="place-edit place-finish"
+                onClick={() => {
+                  pending.current?.abort();
+                  setDismissed(true);
+                  nextFocus.current = "change";
+                  setEditing(false);
+                }}
+              >
+                <Check size={14} />
+                입력 완료
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <div
+          className="place-selected"
+          role="group"
+          aria-labelledby={`${id}-label`}
+        >
+          <span className="place-selected-icon">
+            <MapPin size={19} />
+          </span>
+          <div className="place-selected-copy">
+            <strong>{display.name}</strong>
+            {display.address && <span>{display.address}</span>}
+          </div>
+        </div>
+      )}
       {show && (
         <div className="place-search-panel">
           <div className="place-search-heading">
