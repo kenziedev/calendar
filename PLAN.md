@@ -86,6 +86,8 @@ Sites 버전 6 배포 성공(소스 `378ecdceefbe6110f14a2e3812930f2e33d44038`).
 - [x] 타입 검사·회귀 테스트 17개, 로컬 좌표 저장/조회/변경/구버전 편집 검증 통과.
 - [x] PC 1440px·모바일 390px에서 실제 지도 핀·저장·펼치기·갱신 유지·수동 장소 변경 확인.
 - [x] 서버 및 정적 화면 빌드 통과.
-- [ ] 검증용 로컬 일정 정리 및 운영 배포.
+- [x] 검증용 로컬 일정 정리 및 운영 배포.
 
 확인 화면: `outputs/inline-map-desktop.png`, `outputs/inline-map-mobile.png`. 네이버 Maps 별도 신청 없이 기본 지도로 구현했으며 기존 네이버 지도 링크를 유지한다.
+
+Sites 버전 7 배포 성공(소스 `1307b620d6b025e1dd45d61515a5f329b9bf2713`, 마이그레이션 0002 포함). 이후 GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36389107718
