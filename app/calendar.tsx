@@ -48,6 +48,8 @@ import {
 import { registerCalendarTool } from "../lib/webmcp";
 import type { HolidayCalendar } from "../lib/holidays";
 import { naverMapUrl } from "../lib/maps";
+import PlacePicker from "./place-picker";
+import type { PlaceSearch } from "../lib/places";
 const API_ORIGIN = "https://kenzie-our-calendar.ohhs2.chatgpt.site";
 const SESSION_KEY = "our-calendar-session-v1";
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -115,7 +117,7 @@ export default function Calendar() {
         event: CalendarEvent;
         token: string;
         holidayCalendar: HolidayCalendar;
-      };
+      } & PlaceSearch;
       if (!response.ok) {
         const e = new Error(
           data.error || "요청을 처리하지 못했어요.",
@@ -141,6 +143,18 @@ export default function Calendar() {
       sessionStorage.removeItem(SESSION_KEY);
     } catch {}
   }, []);
+  const searchPlaces = useCallback(
+    async (query: string, signal: AbortSignal) => {
+      try {
+        return await api(`places?q=${encodeURIComponent(query)}`, { signal });
+      } catch (error) {
+        if (!signal.aborted && (error as ApiError).status === 401)
+          forgetSession();
+        throw error;
+      }
+    },
+    [api, forgetSession],
+  );
   const refresh = useCallback(
     async (quiet = false) => {
       if (!token) return;
@@ -1227,18 +1241,11 @@ export default function Calendar() {
                   </p>
                 </>
               )}
-              <label className="form-row">
-                <span>
-                  <MapPin size={17} />
-                  장소
-                </span>
-                <input
-                  placeholder="장소명, 주소 또는 네이버 지도 링크"
-                  maxLength={200}
-                  value={editing.location}
-                  onChange={(e) => update("location", e.target.value)}
-                />
-              </label>
+              <PlacePicker
+                value={editing.location}
+                onChange={(value) => update("location", value)}
+                search={searchPlaces}
+              />
               {naverMapUrl(editing.location) && (
                 <div className="location-map-action">
                   <a
