@@ -26,16 +26,21 @@ test("place selection strips provider markup, prefers road address and stays wit
   assert.ok(places.every((place) => place.location.length <= 200));
   assert.equal(places[2].address, "서울특별시 종로구 사직로 161");
 });
-test("API requests use fixed provider origin, encoded query, limit 5 and server credentials", async () => {
+test("API HUB requests use the documented local search path, JSON format and server credentials", async () => {
   // Exercise the actual request contract with test-only credentials.
   await searchNaverPlaces(
     "광화문 & 서울",
     { id: "test-id", secret: "test-secret" },
     async (url, init) => {
-      assert.equal(url.origin, "https://openapi.naver.com");
+      assert.equal(url.origin, "https://naverapihub.apigw.ntruss.com");
+      assert.equal(url.pathname, "/search/v1/local");
       assert.equal(url.searchParams.get("query"), "광화문 & 서울");
       assert.equal(url.searchParams.get("display"), "5");
-      assert.equal(init.headers["X-Naver-Client-Secret"], "test-secret");
+      assert.equal(url.searchParams.get("start"), "1");
+      assert.equal(url.searchParams.get("format"), "json");
+      assert.equal(init.headers["X-NCP-APIGW-API-KEY-ID"], "test-id");
+      assert.equal(init.headers["X-NCP-APIGW-API-KEY"], "test-secret");
+      assert.equal(init.headers["X-Naver-Client-Secret"], undefined);
       return Response.json({ items: [] });
     },
   );

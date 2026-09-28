@@ -14,21 +14,26 @@
 - 토요일 파란색, 일요일·공휴일 빨간색, 공휴일 이름과 목록 표시
 - 장소를 누르면 네이버 지도 열기: 장소명·주소 검색 및 네이버 지도 공유 링크 지원
 
-일정의 장소 입력란에 장소명이나 주소를 넣으면 `네이버 지도에서 보기`가 표시됩니다. 저장 후에는 날짜별 일정과 월 목록에서도 바로 열 수 있습니다. `https://naver.me/...`, `https://map.naver.com/...` 공유 링크도 그대로 연결됩니다. 모바일 앱 연결은 네이버와 기기 설정에 따라 처리됩니다. 장소 자동완성이나 좌표 저장 없이 기존 장소 필드를 사용합니다.
+일정의 장소 입력란에 장소명이나 주소를 넣으면 `네이버 지도에서 보기`가 표시됩니다. 저장 후에는 날짜별 일정과 월 목록에서도 바로 열 수 있습니다. `https://naver.me/...`, `https://map.naver.com/...` 공유 링크도 그대로 연결됩니다. 모바일 앱 연결은 네이버와 기기 설정에 따라 처리됩니다. 장소 검색에서 선택한 이름·주소는 기존 장소 필드에 저장합니다.
 
-## 장소 검색 연결 준비
+## 장소 검색 설정
 
-입력 중 네이버 검색 결과를 표시하고 장소명·주소를 선택하는 코드를 준비했습니다. 운영 활성화는 네이버 검색 API 키 설정 및 실제 검색 검증 후 진행합니다.
+입력 중 네이버 검색 결과를 표시하고 장소명·주소를 선택합니다. 2026-09-28에 API HUB 앱 `kenzie-calendar`의 지역 검색 연결과 실제 결과 선택·저장을 검증했습니다. 운영 키는 서버의 비밀 환경변수로 관리합니다.
 
-1. [네이버 개발자센터](https://developers.naver.com/apps/#/register)에서 애플리케이션을 등록하고 사용 API로 **검색**을 선택합니다.
-2. 발급된 Client ID와 Client Secret을 Git에서 제외된 로컬 `.env`에 아래 이름으로 추가합니다. 채팅·소스 코드·Git에는 키를 넣지 않습니다.
+기존 네이버 개발자센터의 검색 API 신규 신청은 2026-07-31부터 중단되었습니다. [네이버 공식 이관 공지](https://developers.naver.com/notice/article/32530). 새로 발급한 Developers 키는 검색 권한을 추가할 수 없고 API HUB에서도 사용할 수 없습니다.
+
+1. [네이버 클라우드 플랫폼](https://www.ncloud.com/product/applicationService/naverApiHub)에 로그인하고 콘솔 → Application Services → NAVER API HUB → Subscription에서 이용 신청합니다.
+2. Application 등록에서 **NAVER 검색 → 지역**을 선택하고 `kenzie-calendar` 등의 이름으로 등록합니다. [공식 등록 안내](https://guide.ncloud-docs.com/docs/apihub-application).
+3. API HUB에서 새로 발급된 Client ID와 Client Secret으로 Git에서 제외된 로컬 `.env`의 아래 두 값을 교체합니다. 기존 Developers 키와는 호환되지 않습니다. 채팅·소스 코드·Git에는 키를 넣지 않습니다.
 
    ```dotenv
    NAVER_CLIENT_ID=발급받은_Client_ID
    NAVER_CLIENT_SECRET=발급받은_Client_Secret
    ```
 
-3. 같은 이름을 운영 서버의 비밀 환경변수로 설정하고 배포합니다. 키는 브라우저로 보내지 않으며, 로그인한 세션의 서버 요청으로만 검색합니다.
+4. 실제 지역 검색 응답을 검증한 뒤 같은 이름을 운영 서버의 비밀 환경변수로 설정하고 배포합니다. 키는 브라우저로 보내지 않으며, 로그인한 세션의 서버 요청으로만 검색합니다.
+
+서버는 API HUB의 `https://naverapihub.apigw.ntruss.com/search/v1/local`과 `X-NCP-APIGW-API-KEY-ID`·`X-NCP-APIGW-API-KEY` 헤더를 사용합니다. [지역 검색 명세](https://api.ncloud-docs.com/docs/naver-api-hub-search-local), [이관 가이드](https://guide.ncloud-docs.com/docs/apihub-migration).
 
 검색은 2자 이상 입력 후 350ms 대기, 최대 5개 결과를 표시합니다. 선택한 장소명·도로명 주소를 기존 `location` 필드에 저장합니다. 키 미설정·검색 장애 때도 직접 입력과 지도 링크는 유지됩니다. API 업체 웹사이트 URL은 지도 링크로 사용하지 않습니다.
 

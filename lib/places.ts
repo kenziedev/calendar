@@ -68,14 +68,16 @@ export async function searchNaverPlaces(
   credentials: { id: string; secret: string },
   fetcher: typeof fetch = fetch,
 ) {
-  const url = new URL("https://openapi.naver.com/v1/search/local.json");
+  const url = new URL("https://naverapihub.apigw.ntruss.com/search/v1/local");
   url.searchParams.set("query", query);
   url.searchParams.set("display", "5");
+  url.searchParams.set("start", "1");
   url.searchParams.set("sort", "random");
+  url.searchParams.set("format", "json");
   const response = await fetcher(url, {
     headers: {
-      "X-Naver-Client-Id": credentials.id,
-      "X-Naver-Client-Secret": credentials.secret,
+      "X-NCP-APIGW-API-KEY-ID": credentials.id,
+      "X-NCP-APIGW-API-KEY": credentials.secret,
     },
     signal: AbortSignal.timeout(6000),
   });

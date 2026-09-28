@@ -175,7 +175,7 @@ export default function PlacePicker({
               aria-label="네이버 장소 검색 결과"
             >
               {results.map((place, index) => (
-              <li key={place.location} role="presentation">
+                <li key={place.location} role="presentation">
                   <button
                     id={`${id}-option-${index}`}
                     type="button"
