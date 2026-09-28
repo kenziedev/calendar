@@ -71,6 +71,8 @@
 - [x] 지역명·장소명 내부 구분점·직접 입력·공유 링크 회귀 테스트 5개 및 타입 검사 통과.
 - [x] 로컬에서 광화문 검색·선택 후 생성된 지도 링크를 열어 광화문 결과 확인. 검증용 입력은 저장하지 않고 취소.
 - [x] 서버 및 정적 화면 빌드 통과.
-- [ ] 운영 주소 배포.
+- [x] 운영 주소 배포.
 
 브라우저 확인 화면: `outputs/naver-map-query-fixed.png`. 같은 이름의 지점이 여러 개이면 네이버 지도 검색 결과에서 확인한다.
+
+Sites 버전 6 배포 성공(소스 `378ecdceefbe6110f14a2e3812930f2e33d44038`). GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36387352576
