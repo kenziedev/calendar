@@ -56,6 +56,10 @@
 - [x] 사용자 승인 후 API HUB 이용 신청, 지역 검색 전용 `kenzie-calendar` 앱 생성, 새 키를 로컬 `.env` 및 운영 비밀 환경변수에 설정.
 - [x] 실제 광화문 검색 결과 5개, PC 키보드 선택·모바일 클릭 선택·이름과 주소 저장 검증. 로컬 검증용 일정 정리.
 - [x] API HUB 요청 계약 테스트 3개, 타입 검사, 서버·정적 화면 빌드 통과.
-- [ ] 실제 네이버 검색 결과 검증 후 운영 배포.
+- [x] 실제 네이버 검색 결과 검증 후 운영 배포.
 
-기존 Developers에서 새로 발급한 키로는 검색 API 신규 등록이 불가하여 API HUB로 연결을 변경했다. 운영 배포를 진행한다.
+기존 Developers에서 새로 발급한 키로는 검색 API 신규 등록이 불가하여 API HUB로 연결을 변경했다. Sites 버전 5(운영 환경변수 revision 2) 및 GitHub Pages 배포를 완료했다. 운영 API에서 로그인 보호, 허용 도메인, 실제 검색 결과 5개를 확인했으며 검증용 세션을 폐기했다. 공개 화면 빌드에 실제 인증키가 포함되지 않음을 확인했다.
+
+- 서버 소스: `3274f1e80f21df9f877655e2efeb14c9c85e0585`
+- 화면 배포: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36385254633
+- 모바일 화면 검증: `outputs/naver-place-search-mobile.png`
