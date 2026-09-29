@@ -28,6 +28,7 @@ import {
   Search,
   LoaderCircle,
   LogOut,
+  Sticker as StickerIcon,
 } from "lucide-react";
 import {
   PEOPLE,
@@ -51,6 +52,13 @@ import { naverMapUrl, placeDisplay } from "../lib/maps";
 import PlacePicker from "./place-picker";
 import PlaceMap from "./place-map";
 import type { PlaceSearch } from "../lib/places";
+import {
+  STICKERS,
+  type StickerId,
+  type StickerResponse,
+} from "../lib/stickers";
+import { Sticker, StickerTray } from "./sticker";
+import { useStickers } from "./use-stickers";
 const API_ORIGIN = "https://kenzie-our-calendar.ohhs2.chatgpt.site";
 const SESSION_KEY = "our-calendar-session-v1";
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -135,6 +143,9 @@ export default function Calendar() {
     useState<HolidayCalendar | null>(null);
   const [holidayError, setHolidayError] = useState("");
   const [holidayLoading, setHolidayLoading] = useState(false);
+  const [decorating, setDecorating] = useState(false);
+  const [stickerBrush, setStickerBrush] = useState<StickerId | null>("frog");
+  const [stampedDate, setStampedDate] = useState("");
   const holidayRequestId = useRef(0);
   const dialog = useRef<HTMLDialogElement>(null),
     returnFocus = useRef<HTMLElement | null>(null),
@@ -173,7 +184,8 @@ export default function Calendar() {
         event: CalendarEvent;
         token: string;
         holidayCalendar: HolidayCalendar;
-      } & PlaceSearch;
+      } & PlaceSearch &
+        StickerResponse;
       if (!response.ok) {
         const e = new Error(
           data.error || "요청을 처리하지 못했어요.",
@@ -194,11 +206,21 @@ export default function Calendar() {
     setToken("");
     setEvents([]);
     setEditing(null);
+    setDecorating(false);
+    setStampedDate("");
     setLastSync("");
     try {
       sessionStorage.removeItem(SESSION_KEY);
     } catch {}
   }, []);
+  const dayStickers = useStickers(token, api, forgetSession);
+  async function stamp(date: string) {
+    setSelected(date);
+    if (await dayStickers.put(date, stickerBrush)) {
+      setStampedDate(date);
+      setToast(stickerBrush ? "스티커를 붙였어요" : "스티커를 지웠어요");
+    }
+  }
   const searchPlaces = useCallback(
     async (query: string, signal: AbortSignal) => {
       try {
@@ -697,11 +719,12 @@ export default function Calendar() {
             </span>
             <button
               className="icon-button"
-              title="일정 및 공휴일 새로고침"
-              aria-label="일정 및 공휴일 새로고침"
+              title="달력 새로고침"
+              aria-label="달력 새로고침"
               onClick={() => {
                 void refresh();
                 void refreshHolidays();
+                void dayStickers.refresh();
               }}
               disabled={loading || holidayLoading}
             >
@@ -789,6 +812,18 @@ export default function Calendar() {
                 </button>
               )}
             </label>
+            <button
+              className={`decorate-toggle ${decorating ? "active" : ""}`}
+              aria-expanded={decorating}
+              aria-controls="sticker-tray"
+              onClick={() => {
+                setView("month");
+                setDecorating((value) => !value);
+              }}
+            >
+              <StickerIcon size={17} />
+              <span>꾸미기</span>
+            </button>
             <div className="view-toggle" aria-label="달력 보기 방식">
               <button
                 className={view === "month" ? "active" : ""}
@@ -803,7 +838,10 @@ export default function Calendar() {
                 className={view === "list" ? "active" : ""}
                 aria-label="목록 보기"
                 aria-pressed={view === "list"}
-                onClick={() => setView("list")}
+                onClick={() => {
+                  setView("list");
+                  setDecorating(false);
+                }}
               >
                 <List size={17} />
                 <span>목록</span>
@@ -817,6 +855,14 @@ export default function Calendar() {
             <button onClick={() => void refresh()}>다시 시도</button>
           </div>
         )}
+        {dayStickers.error && (
+          <div className="connection-error" role="alert">
+            {dayStickers.error}
+            <button onClick={() => void dayStickers.refresh()}>
+              다시 시도
+            </button>
+          </div>
+        )}
         <div className="calendar-body">
           <section
             className="calendar-surface"
@@ -824,6 +870,15 @@ export default function Calendar() {
           >
             {view === "month" ? (
               <>
+                {decorating && (
+                  <StickerTray
+                    brush={stickerBrush}
+                    onBrush={setStickerBrush}
+                    onClose={() => setDecorating(false)}
+                    saving={dayStickers.saving}
+                    loaded={dayStickers.loaded}
+                  />
+                )}
                 <div className="weekdays">
                   {WEEKDAYS.map((d, i) => (
                     <span
@@ -835,13 +890,17 @@ export default function Calendar() {
                   ))}
                 </div>
                 <div
-                  className="month-grid"
+                  className={`month-grid ${decorating ? "decorating" : ""}`}
                   style={{ "--weeks": days.length / 7 } as CSSProperties}
                 >
                   {days.map((date, index) => {
                     const items = visibleOccurrences.filter(
                       (o) => o.startDate <= date && o.endDate >= date,
                     );
+                    const decoration = dayStickers.stickers[date];
+                    const stickerName = STICKERS.find(
+                      (s) => s.id === decoration?.stickerId,
+                    )?.name;
                     return (
                       <div
                         key={date}
@@ -849,7 +908,9 @@ export default function Calendar() {
                       >
                         <button
                           className="day-hit"
-                          aria-label={`${longDate(date)}${holidays[date] ? `, 공휴일 ${holidays[date].join(" · ")}` : ""}, 일정 ${items.length}개`}
+                          aria-label={`${longDate(date)}${holidays[date] ? `, 공휴일 ${holidays[date].join(" · ")}` : ""}, 일정 ${items.length}개${stickerName ? `, ${stickerName} 스티커` : ""}`}
+                          tabIndex={decorating ? -1 : undefined}
+                          aria-hidden={decorating || undefined}
                           aria-pressed={date === selected}
                           onClick={() => setSelected(date)}
                           onDoubleClick={() => {
@@ -871,6 +932,8 @@ export default function Calendar() {
                         {holidays[date] && (
                           <button
                             className="holiday-label"
+                            tabIndex={decorating ? -1 : undefined}
+                            aria-hidden={decorating || undefined}
                             title={holidays[date].join(" · ")}
                             onClick={() => setSelected(date)}
                           >
@@ -882,6 +945,8 @@ export default function Calendar() {
                             <button
                               className={`calendar-event ${o.event.owner} ${o.event.allDay || o.startDate !== o.endDate ? "filled" : ""}`}
                               key={o.key}
+                              tabIndex={decorating ? -1 : undefined}
+                              aria-hidden={decorating || undefined}
                               onClick={() => {
                                 setSelected(date);
                                 openEditor(o.event);
@@ -895,15 +960,44 @@ export default function Calendar() {
                               )}
                             </button>
                           ))}
-                          {items.length > 3 && (
+                          {items.length > 2 && (
                             <button
-                              className="more-events"
+                              className={`more-events ${items.length === 3 ? "mobile-only-more" : ""}`}
+                              tabIndex={decorating ? -1 : undefined}
+                              aria-hidden={decorating || undefined}
                               onClick={() => setSelected(date)}
                             >
-                              +{items.length - 3}개 더
+                              <span className="more-desktop">
+                                +{items.length - 3}개 더
+                              </span>
+                              <span className="more-mobile">
+                                +{items.length - 2}개
+                              </span>
                             </button>
                           )}
                         </div>
+                        {decoration?.stickerId && (
+                          <div
+                            key={`${date}-${decoration.version}`}
+                            className={`day-sticker ${stampedDate === date ? "just-stamped" : ""}`}
+                            style={
+                              {
+                                "--sticker-tilt": `${Number(date.slice(-2)) % 2 ? -7 : 6}deg`,
+                              } as CSSProperties
+                            }
+                            title={`${stickerName} 스티커`}
+                          >
+                            <Sticker id={decoration.stickerId} />
+                          </div>
+                        )}
+                        {decorating && (
+                          <button
+                            className="sticker-date-target"
+                            aria-label={`${longDate(date)}${stickerName ? `, 현재 ${stickerName} 스티커` : ""}, ${stickerBrush ? `${STICKERS.find((s) => s.id === stickerBrush)?.name} 스티커 붙이기` : "스티커 지우기"}`}
+                            disabled={!dayStickers.loaded || dayStickers.saving}
+                            onClick={() => void stamp(date)}
+                          />
+                        )}
                         <div className="mobile-dots">
                           {items.slice(0, 5).map((o) => (
                             <i key={o.key} className={o.event.owner} />

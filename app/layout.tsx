@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./stickers.css";
 
 export const metadata: Metadata = {
   title: "공유 캘린더",

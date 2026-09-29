@@ -104,3 +104,15 @@ Sites 버전 7 배포 성공(소스 `1307b620d6b025e1dd45d61515a5f329b9bf2713`, 
 확인 화면: `outputs/place-ui-mobile.png`, `outputs/place-ui-long-desktop.png`.
 
 Sites 버전 8 배포 성공(소스 `06c2cfa5a096a082aea3bca8916f019657880296`). GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36389955527
+
+## 2026-09-29 월간 달력 스티커 꾸미기
+
+- [x] Hobonichi·MIDORI·Goodnotes 공개 레퍼런스 확인 및 날짜별 스티커 방식 설계.
+- [x] 투명 배경의 전용 그림 8종 생성, 프롬프트와 출처를 `docs/sticker-design.md`에 기록.
+- [x] 꾸미기 패널, 날짜 선택으로 붙이기·교체·지우기, 붙이기 효과와 동작 줄이기 지원.
+- [x] 날짜별 공유 저장, 로그인 보호, 동시 수정 감지, 지운 날짜의 버전 유지와 자동 갱신 구현.
+- [x] 새로고침·월 이동·삭제·재등록, PC 1440px 및 모바일 390px·320px 확인. 일정과 그림의 별도 공간, 모바일 숨겨진 일정 수 표시 보완.
+- [x] API 인증·입력 검증·공유 조회·동시 수정·삭제 후 충돌 검증, 기존 회귀 테스트 17개 통과.
+- [ ] 최종 빌드, 검증용 로컬 데이터 정리, 운영 배포.
+
+확인 화면: `outputs/stickers-desktop.png`, `outputs/stickers-mobile.png`, `outputs/stickers-small.png`.

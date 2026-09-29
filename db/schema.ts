@@ -1,4 +1,10 @@
 import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+export const dayStickers = sqliteTable("day_stickers", {
+  date: text("date").primaryKey(),
+  stickerId: text("stickerId"),
+  version: integer("version").notNull().default(1),
+  updatedAt: integer("updatedAt").notNull(),
+});
 export const holidayCache = sqliteTable("holiday_cache", {
   id: text("id").primaryKey(),
   payload: text("payload").notNull(),

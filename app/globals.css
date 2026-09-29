@@ -667,6 +667,8 @@ button {
 }
 .day-cell {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
