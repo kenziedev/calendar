@@ -127,6 +127,8 @@ Sites 버전 9 배포 성공(소스 `627c31a00611e105259de70bf13bb90b537ac4d6`, 
 - [x] 월간·날짜 상세·목록·검색·인물 필터·사람별 개수·다가오는 일정·공유 일정 조회 반영.
 - [x] 날짜 계산 13개 및 기존 테스트 17개, API 저장·공유·충돌·삭제·캐릭터 ID 검증 통과.
 - [x] 로컬 화면에서 등록·수정·날짜 옵션·검색·필터·목록·새로고침 유지와 PC/모바일 화면 확인.
-- [ ] 최종 빌드·검증용 로컬 데이터 정리·운영 배포.
+- [x] 최종 빌드·검증용 로컬 데이터 정리·운영 배포.
 
 사용법·날짜 기준·이미지 출처: `docs/anniversaries-and-characters.md`. 확인 화면: `outputs/characters-anniversaries-desktop.png`, `outputs/anniversary-mobile.png`, `outputs/character-stickers-mobile.png`.
+
+Sites 버전 10 배포 성공(소스 `8543f698fdd7e7873fadac5355f36e13ea53d90b`, 마이그레이션 0004 포함). 운영 기념일 조회 HTTP 200 확인 후 검증용 세션을 폐기했다. GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36511869256
