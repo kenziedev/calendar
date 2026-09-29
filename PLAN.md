@@ -113,6 +113,8 @@ Sites 버전 8 배포 성공(소스 `06c2cfa5a096a082aea3bca8916f019657880296`).
 - [x] 날짜별 공유 저장, 로그인 보호, 동시 수정 감지, 지운 날짜의 버전 유지와 자동 갱신 구현.
 - [x] 새로고침·월 이동·삭제·재등록, PC 1440px 및 모바일 390px·320px 확인. 일정과 그림의 별도 공간, 모바일 숨겨진 일정 수 표시 보완.
 - [x] API 인증·입력 검증·공유 조회·동시 수정·삭제 후 충돌 검증, 기존 회귀 테스트 17개 통과.
-- [ ] 최종 빌드, 검증용 로컬 데이터 정리, 운영 배포.
+- [x] 최종 빌드, 검증용 로컬 데이터 정리, 운영 배포.
 
 확인 화면: `outputs/stickers-desktop.png`, `outputs/stickers-mobile.png`, `outputs/stickers-small.png`.
+
+Sites 버전 9 배포 성공(소스 `627c31a00611e105259de70bf13bb90b537ac4d6`, 마이그레이션 0003 포함). 운영 스티커 조회 HTTP 200 확인 후 검증용 세션을 폐기했다. GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36509210037
