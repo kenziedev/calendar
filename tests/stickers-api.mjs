@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { STICKERS } from "../lib/stickers.ts";
 const base = process.argv[2] || "http://localhost:5173";
 if (!["localhost", "127.0.0.1"].includes(new URL(base).hostname)) {
   throw new Error("Run sticker write tests only against a local database.");
@@ -115,8 +116,22 @@ try {
     (await call("GET", null, b)).data.stickers.find((s) => s.date === date),
     replaced.data.sticker,
   );
+  let nextVersion = replaced.data.sticker.version;
+  for (const { id } of STICKERS.filter((sticker) => sticker.id.includes("-"))) {
+    const pose = await call(
+      "POST",
+      { date, stickerId: id, version: nextVersion },
+      a,
+    );
+    assert.equal(pose.status, 200, `Accept new pose ${id}`);
+    const shared = (await call("GET", null, b)).data.stickers.find(
+      (s) => s.date === date,
+    );
+    assert.equal(shared.stickerId, id, `Persist and share new pose ${id}`);
+    nextVersion = shared.version;
+  }
   console.log(
-    "PASS: sticker auth/CORS, date and ID validation, shared persistence, concurrent writes, tombstone conflict, replacement.",
+    "PASS: sticker auth/CORS, date and ID validation, shared persistence, concurrent writes, tombstone conflict, replacement, all new character poses.",
   );
 } finally {
   if (owned && sessions[0]) {

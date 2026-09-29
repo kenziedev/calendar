@@ -24,7 +24,7 @@
 | 꼬부기 | [Pokédex](https://www.pokemon.com/us/pokedex/squirtle) | [007.png](https://assets.pokemon.com/assets/cms2/img/pokedex/detail/007.png) | `assets/squirtle-official.png` |
 | 커비 | [공식 캐릭터 페이지](https://www.kirby.jp/character/kirby/) | [03.png](https://www.kirby.jp/25th/cms/wp-content/themes/kirby-v2/assets/imgs/character/kirby/03.png) | `assets/kirby-official.png` |
 
-기존 8종과 함께 총 12종을 꾸미기 패널에서 선택할 수 있다. 캐릭터 권리는 각 권리자에게 있다.
+처음 기존 8종과 함께 총 12종을 추가했으며, 이후 다른 모습을 더해 총 27종으로 확장했다. 추가 출처와 사용법은 [sticker-poses.md](sticker-poses.md)를 참고한다. 캐릭터 권리는 각 권리자에게 있다.
 
 ## 검증
 

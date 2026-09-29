@@ -55,7 +55,7 @@ import PlacePicker from "./place-picker";
 import PlaceMap from "./place-map";
 import type { PlaceSearch } from "../lib/places";
 import {
-  STICKERS,
+  stickerName as getStickerName,
   type StickerId,
   type StickerResponse,
 } from "../lib/stickers";
@@ -1014,9 +1014,9 @@ export default function Calendar() {
                       })),
                     ];
                     const decoration = dayStickers.stickers[date];
-                    const stickerName = STICKERS.find(
-                      (s) => s.id === decoration?.stickerId,
-                    )?.name;
+                    const stickerName = getStickerName(
+                      decoration?.stickerId ?? null,
+                    );
                     return (
                       <div
                         key={date}
@@ -1135,7 +1135,7 @@ export default function Calendar() {
                         {decorating && (
                           <button
                             className="sticker-date-target"
-                            aria-label={`${longDate(date)}${stickerName ? `, 현재 ${stickerName} 스티커` : ""}, ${stickerBrush ? `${STICKERS.find((s) => s.id === stickerBrush)?.name} 스티커 붙이기` : "스티커 지우기"}`}
+                            aria-label={`${longDate(date)}${stickerName ? `, 현재 ${stickerName} 스티커` : ""}, ${stickerBrush ? `${getStickerName(stickerBrush)} 스티커 붙이기` : "스티커 지우기"}`}
                             disabled={!dayStickers.loaded || dayStickers.saving}
                             onClick={() => void stamp(date)}
                           />

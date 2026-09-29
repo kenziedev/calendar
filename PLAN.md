@@ -132,3 +132,10 @@ Sites 버전 9 배포 성공(소스 `627c31a00611e105259de70bf13bb90b537ac4d6`, 
 사용법·날짜 기준·이미지 출처: `docs/anniversaries-and-characters.md`. 확인 화면: `outputs/characters-anniversaries-desktop.png`, `outputs/anniversary-mobile.png`, `outputs/character-stickers-mobile.png`.
 
 Sites 버전 10 배포 성공(소스 `8543f698fdd7e7873fadac5355f36e13ea53d90b`, 마이그레이션 0004 포함). 운영 기념일 조회 HTTP 200 확인 후 검증용 세션을 폐기했다. GitHub Pages 빌드·검증·배포 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36511869256
+
+## 2026-09-29 캐릭터 스티커 다른 모습 추가
+
+- [x] 공식 공개 이미지에서 커비 총 10종, 피카츄·파이리·꼬부기 각 3종 선정 및 출처 기록. 전체 27종.
+- [x] 캐릭터별 선택창, 큰 미리보기, 현재 선택 표시, 모바일 배치 적용. 기존 스티커 ID 유지.
+- [x] 새 15종 저장·공유 조회·교체·삭제, 새로고침 유지, PC 1440px·모바일 390px/320px 검증 및 로컬 테스트 자료 정리.
+- [ ] 최종 빌드 및 운영 서버·화면 배포.

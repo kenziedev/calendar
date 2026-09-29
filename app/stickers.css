@@ -63,7 +63,7 @@
 }
 .sticker-options {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 5px;
   margin: 13px 0 6px;
 }
@@ -95,21 +95,50 @@
     drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)
     drop-shadow(0 2px 1px #6d514522);
 }
-.sticker-collection > p {
-  margin-top: 13px;
-  font-size: 11px;
-  color: #9a8870;
+.sticker-collections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 15px 0 8px;
+}
+.sticker-collections button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #eadfce;
+  border-radius: 20px;
+  color: #8b7963;
+  background: #fffefa;
+  font-size: 12px;
+}
+.sticker-collections button span {
+  font-size: 10px;
+  opacity: 0.75;
+}
+.sticker-collections button.active {
+  border-color: #d8b3bc;
+  background: #fae8ee;
+  color: #8a4f65;
+}
+.sticker-collections button:focus-visible,
+.sticker-option:focus-visible {
+  outline: 2px solid #b98c49;
+  outline-offset: 2px;
+}
+.sticker-collection {
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 3px;
 }
 .sticker-collection .sticker-options {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 5px;
-}
-@media (min-width: 1101px) {
-  .sticker-collection .sticker-options {
-    grid-template-columns: repeat(8, minmax(0, 1fr));
-  }
+  margin: 0 0 6px;
 }
 .sticker-option .sticker-art {
+  width: 60px;
+  height: 60px;
   transition: transform 160ms ease;
 }
 .sticker-option:hover .sticker-art {
@@ -129,9 +158,17 @@
   padding-top: 5px;
 }
 .sticker-tray-footer > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
   font-size: 11px;
   color: #9a8870;
   line-height: 1.5;
+}
+.sticker-tray-footer .sticker-brush-preview {
+  width: 24px;
+  height: 24px;
 }
 .sticker-eraser {
   border: 1px solid transparent;
@@ -250,6 +287,16 @@
   .sticker-option {
     gap: 2px;
     padding: 4px 2px;
+  }
+  .sticker-option .sticker-art {
+    width: 52px;
+    height: 52px;
+  }
+  .sticker-collections {
+    gap: 5px;
+  }
+  .sticker-collections button {
+    padding: 6px 8px;
   }
   .sticker-art {
     width: 42px;
