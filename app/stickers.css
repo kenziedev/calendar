@@ -136,6 +136,21 @@
 .sticker-collection .sticker-options {
   margin: 0 0 6px;
 }
+.pokemon-collection {
+  max-height: 340px;
+}
+.pokemon-collection .sticker-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.pokemon-sticker-label {
+  line-height: 1.4;
+}
+.pokemon-sticker-label small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: #9a8870;
+}
 .sticker-option .sticker-art {
   width: 60px;
   height: 60px;

@@ -126,7 +126,10 @@ export function StickerTray({
           </button>
         ))}
       </div>
-      <div className="sticker-collection">
+      <div
+        key={collection}
+        className={`sticker-collection ${collection === "pokemon" ? "pokemon-collection" : ""}`}
+      >
         <div
           id="sticker-options"
           className="sticker-options"
@@ -142,7 +145,14 @@ export function StickerTray({
               onClick={() => onBrush(s.id)}
             >
               <Sticker id={s.id} />
-              <span>{s.label}</span>
+              {s.collection === "pokemon" ? (
+                <span className="pokemon-sticker-label">
+                  {s.name}
+                  <small>{s.label}</small>
+                </span>
+              ) : (
+                <span>{s.label}</span>
+              )}
             </button>
           ))}
         </div>
