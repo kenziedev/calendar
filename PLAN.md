@@ -139,4 +139,8 @@ Sites 버전 10 배포 성공(소스 `8543f698fdd7e7873fadac5355f36e13ea53d90b`,
 - [x] 캐릭터별 선택창, 큰 미리보기, 현재 선택 표시, 모바일 배치 적용. 기존 스티커 ID 유지.
 - [x] 후속 요청으로 피카츄·파이리·꼬부기를 포켓몬 9종 묶음에 통합. 커비·포켓몬·다이어리 3개 분류 및 포켓몬 이름·포즈 두 줄 표시.
 - [x] 새 15종 저장·공유 조회·교체·삭제, 새로고침 유지, PC 1440px·모바일 390px/320px 검증 및 로컬 테스트 자료 정리.
-- [ ] 최종 빌드 및 운영 서버·화면 배포.
+- [x] 최종 빌드 및 운영 서버·화면 배포.
+
+출처와 검증 기록: `docs/sticker-poses.md`. 커비 10종 선택 화면 `outputs/sticker-poses-desktop.png`, 통합 포켓몬 선택 화면 `outputs/pokemon-group-preview.png`.
+
+캐릭터 추가는 Sites 버전 11과 Pages 실행 36513438493에서 배포했다. 후속 포켓몬 묶음 요청까지 포함한 최종 배포는 Sites 버전 12(소스 `a98da2f7a28e447d93ff1215e616802f038573cf`)와 GitHub Pages 빌드·검증·배포 모두 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36513799752 . `https://kenzie.kr/cal/`에서 최종 화면 파일 반영 및 HTTP 200을 확인했다.
