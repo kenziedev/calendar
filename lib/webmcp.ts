@@ -1,4 +1,5 @@
 import { occurrences, type CalendarEvent } from "./calendar";
+import { anniversaryOccurrences, type Anniversary } from "./anniversaries";
 type ModelContext = {
   registerTool: (
     tool: {
@@ -12,7 +13,10 @@ type ModelContext = {
     options: { signal: AbortSignal },
   ) => void | Promise<void>;
 };
-export function registerCalendarTool(readEvents: () => CalendarEvent[]) {
+export function registerCalendarTool(
+  readEvents: () => CalendarEvent[],
+  readAnniversaries: () => Anniversary[] = () => [],
+) {
   const context = (document as Document & { modelContext?: ModelContext })
     .modelContext;
   if (!context?.registerTool) return;
@@ -29,7 +33,7 @@ export function registerCalendarTool(readEvents: () => CalendarEvent[]) {
           name: "read_calendar_schedule",
           title: "공유 일정 조회",
           description:
-            "열려 있는 공유 캘린더에서 지정한 날짜 범위의 현쪼기·쩡개굴·함께 일정을 읽습니다. 일정을 변경하지 않습니다.",
+            "열려 있는 공유 캘린더에서 지정한 날짜 범위의 현쪼기·쩡개굴·함께 일정과 생일·기념일을 읽습니다. 일정을 변경하지 않습니다.",
           inputSchema: {
             type: "object",
             properties: {
@@ -50,20 +54,36 @@ export function registerCalendarTool(readEvents: () => CalendarEvent[]) {
               Date.parse(value.to) - Date.parse(value.from) > 366 * 86400000
             )
               throw new Error("최대 1년의 올바른 날짜 범위를 입력해 주세요.");
-            return occurrences(readEvents(), value.from, value.to).map(
-              ({ event, startDate, endDate }) => ({
-                id: event.id,
-                title: event.title,
-                owner: event.owner,
-                startDate,
-                endDate,
-                allDay: event.allDay,
-                startTime: event.startTime,
-                endTime: event.endTime,
-                location: event.location,
-                notes: event.notes,
-              }),
-            );
+            return [
+              ...occurrences(readEvents(), value.from, value.to).map(
+                ({ event, startDate, endDate }) => ({
+                  id: event.id,
+                  title: event.title,
+                  owner: event.owner,
+                  startDate,
+                  endDate,
+                  allDay: event.allDay,
+                  startTime: event.startTime,
+                  endTime: event.endTime,
+                  location: event.location,
+                  notes: event.notes,
+                }),
+              ),
+              ...anniversaryOccurrences(
+                readAnniversaries(),
+                value.from,
+                value.to,
+              ).map((o) => ({
+                id: o.anniversary.id,
+                title: o.title,
+                owner: o.anniversary.owner,
+                startDate: o.date,
+                endDate: o.date,
+                allDay: true,
+                kind: o.anniversary.kind,
+                milestone: o.label,
+              })),
+            ].sort((a, b) => a.startDate.localeCompare(b.startDate));
           },
         },
         { signal: lifecycle.signal },

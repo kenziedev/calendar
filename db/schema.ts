@@ -1,4 +1,18 @@
 import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+export const anniversaries = sqliteTable("anniversaries", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  owner: text("owner").notNull(),
+  kind: text("kind").notNull(),
+  startDate: text("startDate").notNull(),
+  yearly: integer("yearly").notNull(),
+  each100: integer("each100").notNull(),
+  countFromOne: integer("countFromOne").notNull().default(1),
+  version: integer("version").notNull().default(1),
+  deleted: integer("deleted").notNull().default(0),
+  createdAt: integer("createdAt").notNull(),
+  updatedAt: integer("updatedAt").notNull(),
+});
 export const dayStickers = sqliteTable("day_stickers", {
   date: text("date").primaryKey(),
   stickerId: text("stickerId"),

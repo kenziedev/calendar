@@ -1,6 +1,11 @@
 import { Check, Eraser } from "lucide-react";
 import stickerSheet from "../assets/calendar-stickers.png";
+import pikachu from "../assets/pikachu-official.png";
+import charmander from "../assets/charmander-official.png";
+import squirtle from "../assets/squirtle-official.png";
+import kirby from "../assets/kirby-official.png";
 import { STICKERS, type StickerId } from "../lib/stickers";
+const characterImages = { pikachu, charmander, squirtle, kirby };
 
 export function Sticker({
   id,
@@ -11,13 +16,18 @@ export function Sticker({
 }) {
   const sticker = STICKERS.find((s) => s.id === id);
   if (!sticker) return null;
+  const character = characterImages[id as keyof typeof characterImages];
+  const picture = character || stickerSheet;
   return (
     <span
       aria-hidden="true"
-      className={`sticker-art ${className}`}
+      className={`sticker-art ${character ? "character-art" : ""} ${className}`}
       style={{
-        backgroundImage: `url(${typeof stickerSheet === "string" ? stickerSheet : stickerSheet.src})`,
-        backgroundPosition: `${(sticker.x * 100) / 3}% ${sticker.y * 100}%`,
+        backgroundImage: `url(${typeof picture === "string" ? picture : picture.src})`,
+        backgroundSize: character ? "contain" : "400% 200%",
+        backgroundPosition: character
+          ? "center"
+          : `${(sticker.x * 100) / 3}% ${sticker.y * 100}%`,
       }}
     />
   );
@@ -47,20 +57,32 @@ export function StickerTray({
           완료
         </button>
       </div>
-      <div className="sticker-options" role="group" aria-label="스티커 종류">
-        {STICKERS.map((s) => (
-          <button
-            key={s.id}
-            className={`sticker-option ${brush === s.id ? "chosen" : ""}`}
-            aria-label={`${s.name} 스티커`}
-            aria-pressed={brush === s.id}
-            onClick={() => onBrush(s.id)}
+      {[
+        ["캐릭터", STICKERS.slice(8)],
+        ["다이어리", STICKERS.slice(0, 8)],
+      ].map(([label, collection]) => (
+        <div className="sticker-collection" key={label as string}>
+          <p>{label as string}</p>
+          <div
+            className="sticker-options"
+            role="group"
+            aria-label={`${label} 스티커`}
           >
-            <Sticker id={s.id} />
-            <span>{s.name}</span>
-          </button>
-        ))}
-      </div>
+            {(collection as (typeof STICKERS)[number][]).map((s) => (
+              <button
+                key={s.id}
+                className={`sticker-option ${brush === s.id ? "chosen" : ""}`}
+                aria-label={`${s.name} 스티커`}
+                aria-pressed={brush === s.id}
+                onClick={() => onBrush(s.id)}
+              >
+                <Sticker id={s.id} />
+                <span>{s.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
       <div className="sticker-tray-footer">
         <span role="status">
           {saving

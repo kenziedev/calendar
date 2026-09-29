@@ -29,6 +29,8 @@ import {
   LoaderCircle,
   LogOut,
   Sticker as StickerIcon,
+  Gift,
+  Cake,
 } from "lucide-react";
 import {
   PEOPLE,
@@ -59,6 +61,14 @@ import {
 } from "../lib/stickers";
 import { Sticker, StickerTray } from "./sticker";
 import { useStickers } from "./use-stickers";
+import {
+  anniversaryOccurrences,
+  type Anniversary,
+  type AnniversaryOccurrence,
+  type AnniversaryResponse,
+} from "../lib/anniversaries";
+import { useAnniversaries } from "./use-anniversaries";
+import AnniversaryManager, { AnniversaryCard } from "./anniversary-manager";
 const API_ORIGIN = "https://kenzie-our-calendar.ohhs2.chatgpt.site";
 const SESSION_KEY = "our-calendar-session-v1";
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -146,6 +156,9 @@ export default function Calendar() {
   const [decorating, setDecorating] = useState(false);
   const [stickerBrush, setStickerBrush] = useState<StickerId | null>("frog");
   const [stampedDate, setStampedDate] = useState("");
+  const [anniversaryEditor, setAnniversaryEditor] = useState<
+    Anniversary | null | undefined
+  >(undefined);
   const holidayRequestId = useRef(0);
   const dialog = useRef<HTMLDialogElement>(null),
     returnFocus = useRef<HTMLElement | null>(null),
@@ -185,7 +198,8 @@ export default function Calendar() {
         token: string;
         holidayCalendar: HolidayCalendar;
       } & PlaceSearch &
-        StickerResponse;
+        StickerResponse &
+        AnniversaryResponse;
       if (!response.ok) {
         const e = new Error(
           data.error || "요청을 처리하지 못했어요.",
@@ -208,12 +222,14 @@ export default function Calendar() {
     setEditing(null);
     setDecorating(false);
     setStampedDate("");
+    setAnniversaryEditor(undefined);
     setLastSync("");
     try {
       sessionStorage.removeItem(SESSION_KEY);
     } catch {}
   }, []);
   const dayStickers = useStickers(token, api, forgetSession);
+  const anniversaries = useAnniversaries(token, api, forgetSession);
   async function stamp(date: string) {
     setSelected(date);
     if (await dayStickers.put(date, stickerBrush)) {
@@ -332,8 +348,14 @@ export default function Calendar() {
   }, [!!editing]);
   const eventsRef = useRef(events);
   eventsRef.current = events;
+  const anniversariesRef = useRef(anniversaries.rows);
+  anniversariesRef.current = anniversaries.rows;
   useEffect(() => {
-    if (token) return registerCalendarTool(() => eventsRef.current);
+    if (token)
+      return registerCalendarTool(
+        () => eventsRef.current,
+        () => anniversariesRef.current,
+      );
   }, [token]);
   async function login(e: FormEvent) {
     e.preventDefault();
@@ -396,11 +418,44 @@ export default function Calendar() {
     [visible, selected],
   );
   const holidays = holidayCalendar?.holidays ?? {};
+  const visibleAnniversaries = useMemo(
+    () =>
+      anniversaryOccurrences(
+        anniversaries.rows,
+        days[0],
+        days[days.length - 1],
+      ).filter(
+        (o) =>
+          owners.includes(o.anniversary.owner) &&
+          (!query || o.title.toLowerCase().includes(query.toLowerCase())),
+      ),
+    [anniversaries.rows, days, owners, query],
+  );
+  const monthAnniversaries = visibleAnniversaries.filter(
+    (o) => o.date.slice(0, 7) === month.slice(0, 7),
+  );
+  const dayAnniversaries = useMemo(
+    () =>
+      anniversaryOccurrences(anniversaries.rows, selected, selected).filter(
+        (o) =>
+          owners.includes(o.anniversary.owner) &&
+          (!query || o.title.toLowerCase().includes(query.toLowerCase())),
+      ),
+    [anniversaries.rows, selected, owners, query],
+  );
   const monthRows = [
     ...inMonth.map((item) => ({
       date: item.startDate,
       key: item.key,
       item,
+      anniversary: null as AnniversaryOccurrence | null,
+      names: [] as string[],
+    })),
+    ...monthAnniversaries.map((anniversary) => ({
+      date: anniversary.date,
+      key: anniversary.key,
+      item: null,
+      anniversary,
       names: [] as string[],
     })),
     ...Object.entries(holidays)
@@ -414,17 +469,39 @@ export default function Calendar() {
         date,
         key: `holiday-${date}`,
         item: null,
+        anniversary: null as AnniversaryOccurrence | null,
         names,
       })),
   ].sort((a, b) => a.date.localeCompare(b.date));
   const upcoming = useMemo(
     () =>
-      occurrences(
-        events.filter((e) => e.owner === "together"),
-        currentDay,
-        addDays(currentDay, 60),
-      ).slice(0, 3),
-    [events, currentDay],
+      [
+        ...occurrences(
+          events.filter((e) => e.owner === "together"),
+          currentDay,
+          addDays(currentDay, 60),
+        ).map((o) => ({
+          key: o.key,
+          date: o.startDate,
+          title: o.event.title,
+          event: o.event,
+          anniversary: null as Anniversary | null,
+        })),
+        ...anniversaryOccurrences(
+          anniversaries.rows.filter((a) => a.owner === "together"),
+          currentDay,
+          addDays(currentDay, 60),
+        ).map((o) => ({
+          key: o.key,
+          date: o.date,
+          title: o.title,
+          event: null as CalendarEvent | null,
+          anniversary: o.anniversary,
+        })),
+      ]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 3),
+    [events, anniversaries.rows, currentDay],
   );
   function changeMonth(amount: number) {
     const next = shiftMonth(month, amount);
@@ -651,13 +728,16 @@ export default function Calendar() {
               </span>
               <span>{PEOPLE[owner].name}</span>
               <span className="owner-count">
-                {
-                  occurrences(
-                    events.filter((e) => e.owner === owner),
+                {occurrences(
+                  events.filter((e) => e.owner === owner),
+                  month,
+                  addDays(shiftMonth(month, 1), -1),
+                ).length +
+                  anniversaryOccurrences(
+                    anniversaries.rows.filter((a) => a.owner === owner),
                     month,
                     addDays(shiftMonth(month, 1), -1),
-                  ).length
-                }
+                  ).length}
               </span>
             </button>
           ))}
@@ -673,13 +753,14 @@ export default function Calendar() {
                 className="upcoming-item"
                 key={o.key}
                 onClick={() => {
-                  setSelected(o.startDate);
-                  setMonth(monthStart(o.startDate));
-                  openEditor(o.event);
+                  setSelected(o.date);
+                  setMonth(monthStart(o.date));
+                  if (o.anniversary) setAnniversaryEditor(o.anniversary);
+                  else if (o.event) openEditor(o.event);
                 }}
               >
-                <span>{shortDate(o.startDate)}</span>
-                <strong>{o.event.title}</strong>
+                <span>{shortDate(o.date)}</span>
+                <strong>{o.title}</strong>
               </button>
             ))
           ) : (
@@ -725,6 +806,7 @@ export default function Calendar() {
                 void refresh();
                 void refreshHolidays();
                 void dayStickers.refresh();
+                void anniversaries.refresh();
               }}
               disabled={loading || holidayLoading}
             >
@@ -795,7 +877,8 @@ export default function Calendar() {
             ))}
           </div>
           <div className="month-summary">
-            이번 달 일정 <strong>{inMonth.length}</strong>
+            이번 달 일정{" "}
+            <strong>{inMonth.length + monthAnniversaries.length}</strong>
           </div>
           <div className="toolbar-right">
             <label className="search">
@@ -812,6 +895,16 @@ export default function Calendar() {
                 </button>
               )}
             </label>
+            <button
+              className="anniversary-toggle"
+              onClick={() => {
+                setDecorating(false);
+                setAnniversaryEditor(null);
+              }}
+            >
+              <Gift size={17} />
+              <span>기념일</span>
+            </button>
             <button
               className={`decorate-toggle ${decorating ? "active" : ""}`}
               aria-expanded={decorating}
@@ -863,6 +956,14 @@ export default function Calendar() {
             </button>
           </div>
         )}
+        {anniversaries.error && anniversaryEditor === undefined && (
+          <div className="connection-error" role="alert">
+            {anniversaries.error}
+            <button onClick={() => void anniversaries.refresh()}>
+              다시 시도
+            </button>
+          </div>
+        )}
         <div className="calendar-body">
           <section
             className="calendar-surface"
@@ -897,6 +998,21 @@ export default function Calendar() {
                     const items = visibleOccurrences.filter(
                       (o) => o.startDate <= date && o.endDate >= date,
                     );
+                    const special = visibleAnniversaries.filter(
+                      (o) => o.date === date,
+                    );
+                    const entries = [
+                      ...special.map((anniversary) => ({
+                        key: anniversary.key,
+                        anniversary,
+                        event: null as Occurrence | null,
+                      })),
+                      ...items.map((event) => ({
+                        key: event.key,
+                        anniversary: null as AnniversaryOccurrence | null,
+                        event,
+                      })),
+                    ];
                     const decoration = dayStickers.stickers[date];
                     const stickerName = STICKERS.find(
                       (s) => s.id === decoration?.stickerId,
@@ -908,7 +1024,7 @@ export default function Calendar() {
                       >
                         <button
                           className="day-hit"
-                          aria-label={`${longDate(date)}${holidays[date] ? `, 공휴일 ${holidays[date].join(" · ")}` : ""}, 일정 ${items.length}개${stickerName ? `, ${stickerName} 스티커` : ""}`}
+                          aria-label={`${longDate(date)}${holidays[date] ? `, 공휴일 ${holidays[date].join(" · ")}` : ""}, 일정 ${entries.length}개${stickerName ? `, ${stickerName} 스티커` : ""}`}
                           tabIndex={decorating ? -1 : undefined}
                           aria-hidden={decorating || undefined}
                           aria-pressed={date === selected}
@@ -941,37 +1057,63 @@ export default function Calendar() {
                           </button>
                         )}
                         <div className="cell-events">
-                          {items.slice(0, 3).map((o) => (
+                          {entries.slice(0, 3).map((entry) =>
+                            entry.anniversary ? (
+                              <button
+                                className="calendar-event anniversary-event"
+                                key={entry.key}
+                                title={entry.anniversary.title}
+                                tabIndex={decorating ? -1 : undefined}
+                                aria-hidden={decorating || undefined}
+                                onClick={() => {
+                                  setSelected(date);
+                                  setAnniversaryEditor(
+                                    entry.anniversary!.anniversary,
+                                  );
+                                }}
+                              >
+                                {entry.anniversary.anniversary.kind ===
+                                "birthday" ? (
+                                  <Cake size={12} />
+                                ) : (
+                                  <Gift size={12} />
+                                )}
+                                <span>{entry.anniversary.title}</span>
+                              </button>
+                            ) : (
+                              ((o: Occurrence) => (
+                                <button
+                                  className={`calendar-event ${o.event.owner} ${o.event.allDay || o.startDate !== o.endDate ? "filled" : ""}`}
+                                  key={o.key}
+                                  tabIndex={decorating ? -1 : undefined}
+                                  aria-hidden={decorating || undefined}
+                                  onClick={() => {
+                                    setSelected(date);
+                                    openEditor(o.event);
+                                  }}
+                                  title={`${PEOPLE[o.event.owner].name} · ${o.event.title}`}
+                                >
+                                  <span className="event-dot" />
+                                  <span>{o.event.title}</span>
+                                  {!o.event.allDay && (
+                                    <small>{o.event.startTime}</small>
+                                  )}
+                                </button>
+                              ))(entry.event!)
+                            ),
+                          )}
+                          {entries.length > 2 && (
                             <button
-                              className={`calendar-event ${o.event.owner} ${o.event.allDay || o.startDate !== o.endDate ? "filled" : ""}`}
-                              key={o.key}
-                              tabIndex={decorating ? -1 : undefined}
-                              aria-hidden={decorating || undefined}
-                              onClick={() => {
-                                setSelected(date);
-                                openEditor(o.event);
-                              }}
-                              title={`${PEOPLE[o.event.owner].name} · ${o.event.title}`}
-                            >
-                              <span className="event-dot" />
-                              <span>{o.event.title}</span>
-                              {!o.event.allDay && (
-                                <small>{o.event.startTime}</small>
-                              )}
-                            </button>
-                          ))}
-                          {items.length > 2 && (
-                            <button
-                              className={`more-events ${items.length === 3 ? "mobile-only-more" : ""}`}
+                              className={`more-events ${entries.length === 3 ? "mobile-only-more" : ""}`}
                               tabIndex={decorating ? -1 : undefined}
                               aria-hidden={decorating || undefined}
                               onClick={() => setSelected(date)}
                             >
                               <span className="more-desktop">
-                                +{items.length - 3}개 더
+                                +{entries.length - 3}개 더
                               </span>
                               <span className="more-mobile">
-                                +{items.length - 2}개
+                                +{entries.length - 2}개
                               </span>
                             </button>
                           )}
@@ -1029,6 +1171,11 @@ export default function Calendar() {
                       </div>
                       {row.item ? (
                         <EventCard item={row.item} onEdit={openEditor} />
+                      ) : row.anniversary ? (
+                        <AnniversaryCard
+                          item={row.anniversary}
+                          onEdit={setAnniversaryEditor}
+                        />
                       ) : (
                         <button
                           className="holiday-list-card"
@@ -1140,14 +1287,27 @@ export default function Calendar() {
                 <strong>{holidays[selected].join(" · ")}</strong>
               </div>
             )}
-            <div className="agenda-count">일정 {dayEvents.length}개</div>
+            <div className="agenda-count">
+              일정 {dayEvents.length + dayAnniversaries.length}개
+            </div>
+            {dayAnniversaries.length > 0 && (
+              <div className="anniversary-day-items">
+                {dayAnniversaries.map((o) => (
+                  <AnniversaryCard
+                    key={o.key}
+                    item={o}
+                    onEdit={setAnniversaryEditor}
+                  />
+                ))}
+              </div>
+            )}
             {dayEvents.length ? (
               <div className="agenda-items">
                 {dayEvents.map((o) => (
                   <EventCard key={o.key} item={o} onEdit={openEditor} />
                 ))}
               </div>
-            ) : (
+            ) : dayAnniversaries.length ? null : (
               <div className="day-empty">
                 <div>
                   <CalendarCheck2 size={29} strokeWidth={1.3} />
@@ -1178,6 +1338,15 @@ export default function Calendar() {
           </aside>
         </div>
       </main>
+      {anniversaryEditor !== undefined && (
+        <AnniversaryManager
+          initialRecord={anniversaryEditor}
+          defaultDate={selected}
+          currentDay={currentDay}
+          store={anniversaries}
+          onClose={() => setAnniversaryEditor(undefined)}
+        />
+      )}
       <button
         className="mobile-fab"
         aria-label="새 일정 만들기"

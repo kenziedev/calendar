@@ -90,6 +90,25 @@
   background-repeat: no-repeat;
   pointer-events: none;
 }
+.character-art {
+  filter: drop-shadow(1px 0 0 white) drop-shadow(-1px 0 0 white)
+    drop-shadow(0 1px 0 white) drop-shadow(0 -1px 0 white)
+    drop-shadow(0 2px 1px #6d514522);
+}
+.sticker-collection > p {
+  margin-top: 13px;
+  font-size: 11px;
+  color: #9a8870;
+}
+.sticker-collection .sticker-options {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 5px;
+}
+@media (min-width: 1101px) {
+  .sticker-collection .sticker-options {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
 .sticker-option .sticker-art {
   transition: transform 160ms ease;
 }
