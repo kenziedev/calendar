@@ -144,3 +144,11 @@ Sites 버전 10 배포 성공(소스 `8543f698fdd7e7873fadac5355f36e13ea53d90b`,
 출처와 검증 기록: `docs/sticker-poses.md`. 커비 10종 선택 화면 `outputs/sticker-poses-desktop.png`, 통합 포켓몬 선택 화면 `outputs/pokemon-group-preview.png`.
 
 캐릭터 추가는 Sites 버전 11과 Pages 실행 36513438493에서 배포했다. 후속 포켓몬 묶음 요청까지 포함한 최종 배포는 Sites 버전 12(소스 `a98da2f7a28e447d93ff1215e616802f038573cf`)와 GitHub Pages 빌드·검증·배포 모두 성공: https://github.com/kenziedev/kenziedev.github.io/actions/runs/36513799752 . `https://kenzie.kr/cal/`에서 최종 화면 파일 반영 및 HTTP 200을 확인했다.
+
+## 2026-10-01 장소 검색 결과가 사라지는 문제
+
+- [x] 운영 API의 노량진·노량진역·광화문 모두 HTTP 200, 검색 결과 5개 확인. 네이버 직접 응답과 운영 비밀 설정 정상 확인, 검사 세션 폐기.
+- [x] 기존 화면에서 노량진 검색 후 끝에 공백을 붙이면 결과가 사라지는 현상 재현. trim한 검색어가 같아 effect는 다시 실행되지 않는데 입력 처리에서 요청과 결과를 취소하던 문제 수정.
+- [x] 같은 검색어 Enter 재검색 및 오류·빈 결과·미연결 상태의 다시 검색 버튼 구현. 미연결 응답 뒤 재시도를 영구 차단하던 상태 제거.
+- [x] 검색 완료 후 공백·검색 도중 공백·다른 검색어·Enter/버튼 재시도 확인. 타입 검사 및 장소 관련 회귀 테스트 6개 통과.
+- [ ] 모바일 검색·선택 확인, 최종 빌드 및 운영 배포.

@@ -1167,6 +1167,11 @@ button {
   line-height: 1.6;
   padding: 12px;
 }
+.place-search-panel .place-retry {
+  margin: 0 12px 10px;
+  border: 1px solid #e4e9e6;
+  font-size: 14px;
+}
 .place-search-panel ul {
   list-style: none;
   margin: 0;

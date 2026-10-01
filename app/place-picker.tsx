@@ -29,7 +29,7 @@ export default function PlacePicker({
   const [phase, setPhase] = useState<
     "idle" | "loading" | "ready" | "error" | "unavailable"
   >("idle");
-  const [unavailable, setUnavailable] = useState(false);
+  const [searchAttempt, setSearchAttempt] = useState(0);
   const query = value.trim();
   const display = placeDisplay(value);
   useEffect(() => {
@@ -54,10 +54,6 @@ export default function PlacePicker({
       setPhase("idle");
       return;
     }
-    if (unavailable) {
-      setPhase("unavailable");
-      return;
-    }
     const controller = new AbortController();
     pending.current = controller;
     setPhase("loading");
@@ -65,7 +61,6 @@ export default function PlacePicker({
       try {
         const response = await search(query, controller.signal);
         if (controller.signal.aborted) return;
-        setUnavailable(!response.enabled);
         setResults(response.places);
         setPhase(response.enabled ? "ready" : "unavailable");
       } catch {
@@ -77,9 +72,15 @@ export default function PlacePicker({
       controller.abort();
       if (pending.current === controller) pending.current = null;
     };
-  }, [eligible, query, search, unavailable]);
+  }, [eligible, query, search, searchAttempt]);
 
   const show = eligible;
+  const retry = () => {
+    pending.current?.abort();
+    setDismissed(false);
+    setSearchAttempt((attempt) => attempt + 1);
+    input.current?.focus();
+  };
   const select = (place: PlaceResult) => {
     pending.current?.abort();
     onSelect(place);
@@ -138,11 +139,14 @@ export default function PlacePicker({
             }
             aria-describedby={`${id}-hint`}
             onChange={(event) => {
-              pending.current?.abort();
+              // Whitespace-only edits keep the request/results for the same query.
+              if (event.target.value.trim() !== query) {
+                pending.current?.abort();
+                setActive(-1);
+                setResults([]);
+              }
               onChange(event.target.value);
               setDismissed(false);
-              setActive(-1);
-              setResults([]);
             }}
             onFocus={() => setFocused(true)}
             onCompositionStart={() => {
@@ -166,7 +170,7 @@ export default function PlacePicker({
               } else if (event.key === "Enter") {
                 event.preventDefault();
                 if (show && results[active]) select(results[active]);
-                else setDismissed(false);
+                else retry();
               }
             }}
           />
@@ -234,6 +238,17 @@ export default function PlacePicker({
             <p role="status">
               검색 결과가 없습니다. 지역명과 장소명을 함께 입력해 보세요.
             </p>
+          )}
+          {(phase === "error" ||
+            phase === "unavailable" ||
+            (phase === "ready" && !results.length)) && (
+            <button
+              type="button"
+              className="place-edit place-retry"
+              onClick={retry}
+            >
+              <Search size={14} /> 다시 검색
+            </button>
           )}
           {results.length > 0 && (
             <ul
